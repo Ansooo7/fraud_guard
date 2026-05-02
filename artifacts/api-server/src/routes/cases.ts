@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, fraudCasesTable, caseNotesTable, usersTable } from "@workspace/db";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
+import { createNotification, notifyAllAdmins } from "../lib/notify";
 import { z } from "zod";
 
 const router = Router();
@@ -78,6 +79,26 @@ router.post("/cases", requireAuth, async (req, res) => {
     .insert(fraudCasesTable)
     .values({ ...parsed.data, createdBy: req.user!.userId })
     .returning();
+
+  // Notify all admins about new case (fire-and-forget)
+  notifyAllAdmins({
+    type: "case_created",
+    title: `New case: ${created.title}`,
+    message: `Priority: ${created.priority}${created.merchantName ? ` · ${created.merchantName}` : ""}`,
+    caseId: created.id,
+  }).catch(() => {});
+
+  // If assigned at creation, notify assignee too
+  if (created.assignedTo && created.assignedTo !== req.user!.userId) {
+    createNotification({
+      userId: created.assignedTo,
+      type: "case_assigned",
+      title: `Case assigned to you: ${created.title}`,
+      message: `You have been assigned to investigate this case.`,
+      caseId: created.id,
+    }).catch(() => {});
+  }
+
   res.status(201).json(created);
 });
 
@@ -125,6 +146,10 @@ router.patch("/cases/:id", requireAuth, async (req, res) => {
     return;
   }
 
+  // Fetch existing to check previous status & assignee
+  const [existing] = await db.select().from(fraudCasesTable).where(eq(fraudCasesTable.id, id)).limit(1);
+  if (!existing) { res.status(404).json({ error: "not_found" }); return; }
+
   const updates: Record<string, unknown> = { ...parsed.data, updatedAt: new Date() };
   if (parsed.data.status === "resolved" || parsed.data.status === "dismissed") {
     updates.resolvedAt = new Date();
@@ -136,7 +161,42 @@ router.patch("/cases/:id", requireAuth, async (req, res) => {
     .where(eq(fraudCasesTable.id, id))
     .returning();
 
-  if (!updated) { res.status(404).json({ error: "not_found" }); return; }
+  // Notify on status change
+  if (parsed.data.status && parsed.data.status !== existing.status) {
+    const statusLabel: Record<string, string> = {
+      under_review: "Under Review",
+      resolved: "Resolved",
+      dismissed: "Dismissed",
+      open: "Open",
+    };
+    const recipients = new Set<number>();
+    if (existing.assignedTo) recipients.add(existing.assignedTo);
+    if (existing.createdBy) recipients.add(existing.createdBy);
+    recipients.delete(req.user!.userId); // don't notify yourself
+
+    recipients.forEach((uid) => {
+      createNotification({
+        userId: uid,
+        type: "case_status_changed",
+        title: `Case status updated: ${existing.title}`,
+        message: `Status changed to ${statusLabel[parsed.data.status!] ?? parsed.data.status}.`,
+        caseId: id,
+      }).catch(() => {});
+    });
+  }
+
+  // Notify on new assignment
+  if (parsed.data.assignedTo && parsed.data.assignedTo !== existing.assignedTo
+      && parsed.data.assignedTo !== req.user!.userId) {
+    createNotification({
+      userId: parsed.data.assignedTo,
+      type: "case_assigned",
+      title: `Case assigned to you: ${existing.title}`,
+      message: `You have been assigned to investigate this case.`,
+      caseId: id,
+    }).catch(() => {});
+  }
+
   res.json(updated);
 });
 
@@ -187,13 +247,35 @@ router.post("/cases/:id/notes", requireAuth, async (req, res) => {
     return;
   }
 
-  // Auto-bump updatedAt on parent case
+  // Fetch case info for notification
+  const [caseRow] = await db.select().from(fraudCasesTable).where(eq(fraudCasesTable.id, id)).limit(1);
+  if (!caseRow) { res.status(404).json({ error: "not_found" }); return; }
+
+  // Bump updatedAt on parent case
   await db.update(fraudCasesTable).set({ updatedAt: new Date() }).where(eq(fraudCasesTable.id, id));
 
   const [note] = await db
     .insert(caseNotesTable)
     .values({ caseId: id, content: parsed.data.content, createdBy: req.user!.userId })
     .returning();
+
+  // Notify assignee and case creator (not the note author)
+  const recipients = new Set<number>();
+  if (caseRow.assignedTo) recipients.add(caseRow.assignedTo);
+  if (caseRow.createdBy) recipients.add(caseRow.createdBy);
+  recipients.delete(req.user!.userId);
+
+  recipients.forEach((uid) => {
+    createNotification({
+      userId: uid,
+      type: "note_added",
+      title: `New note on: ${caseRow.title}`,
+      message: parsed.data.content.length > 80
+        ? parsed.data.content.slice(0, 80) + "…"
+        : parsed.data.content,
+      caseId: id,
+    }).catch(() => {});
+  });
 
   res.status(201).json(note);
 });

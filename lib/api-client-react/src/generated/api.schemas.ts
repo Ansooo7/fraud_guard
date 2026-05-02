@@ -40,6 +40,17 @@ export interface LoginResponse {
   user: User;
 }
 
+export interface AppNotification {
+  id: number;
+  userId: number;
+  type: string;
+  title: string;
+  message?: string | null;
+  caseId?: number | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export type FraudCaseStatus =
   (typeof FraudCaseStatus)[keyof typeof FraudCaseStatus];
 
@@ -504,6 +515,14 @@ export interface RiskUserSummary {
   transactionCount: number;
   flaggedCount: number;
 }
+
+export type GetUnreadCount200 = {
+  count: number;
+};
+
+export type MarkAllRead200 = {
+  ok: boolean;
+};
 
 export type ListCasesParams = {
   status?: ListCasesStatus;

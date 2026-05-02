@@ -6,6 +6,8 @@ import {
   getListAlertsQueryKey,
   getListTransactionsQueryKey,
   getGetAnalyticsSummaryQueryKey,
+  getListNotificationsQueryKey,
+  getGetUnreadCountQueryKey,
 } from "@workspace/api-client-react";
 import {
   LayoutDashboard,
@@ -20,6 +22,7 @@ import {
   SlidersHorizontal,
   FolderOpen,
 } from "lucide-react";
+import NotificationBell from "./NotificationBell";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -49,9 +52,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
+      ws.onopen = () => {
+        // Authenticate so the server can route user-specific notifications
+        ws.send(JSON.stringify({ type: "auth", token }));
+      };
+
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
+
           if (msg.type === "fraud_alert") {
             toast.error(`Fraud Alert: ${msg.data?.reason ?? "Suspicious transaction detected"}`, {
               description: `Severity: ${msg.data?.severity ?? "unknown"}`,
@@ -60,6 +69,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             queryClient.invalidateQueries({ queryKey: getGetAnalyticsSummaryQueryKey() });
           } else if (msg.type === "new_transaction") {
             queryClient.invalidateQueries({ queryKey: getListTransactionsQueryKey() });
+          } else if (msg.type === "notification") {
+            // Real-time push: invalidate notification queries
+            queryClient.invalidateQueries({ queryKey: getListNotificationsQueryKey() });
+            queryClient.invalidateQueries({ queryKey: getGetUnreadCountQueryKey() });
+            // Show a toast for the incoming notification
+            const n = msg.data;
+            if (n?.title) {
+              toast.info(n.title, {
+                description: n.message ?? undefined,
+                duration: 5000,
+              });
+            }
           }
         } catch {
           // ignore parse errors
@@ -132,9 +153,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar with notification bell */}
+        <header className="h-14 border-b border-border flex items-center justify-end px-5 flex-shrink-0 bg-background">
+          <NotificationBell />
+        </header>
+
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

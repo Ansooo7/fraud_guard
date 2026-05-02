@@ -9,6 +9,7 @@ import fraudCheckRouter from "./fraud-check";
 import fraudBatchRouter from "./fraud-batch";
 import rulesRouter from "./rules";
 import casesRouter from "./cases";
+import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(fraudCheckRouter);
 router.use(fraudBatchRouter);
 router.use(rulesRouter);
 router.use(casesRouter);
+router.use(notificationsRouter);
 
 export default router;

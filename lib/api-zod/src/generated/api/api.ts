@@ -120,6 +120,62 @@ export const BatchCheckFraudResponse = zod.object({
 });
 
 /**
+ * @summary List notifications for current user
+ */
+export const ListNotificationsResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  type: zod.string(),
+  title: zod.string(),
+  message: zod.string().nullish(),
+  caseId: zod.number().nullish(),
+  isRead: zod.boolean(),
+  createdAt: zod.string(),
+});
+export const ListNotificationsResponse = zod.array(
+  ListNotificationsResponseItem,
+);
+
+/**
+ * @summary Get unread notification count
+ */
+export const GetUnreadCountResponse = zod.object({
+  count: zod.number(),
+});
+
+/**
+ * @summary Mark all notifications as read
+ */
+export const MarkAllReadResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Mark a notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const MarkNotificationReadResponse = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  type: zod.string(),
+  title: zod.string(),
+  message: zod.string().nullish(),
+  caseId: zod.number().nullish(),
+  isRead: zod.boolean(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Delete a notification
+ */
+export const DeleteNotificationParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
  * @summary List all fraud cases
  */
 export const ListCasesQueryParams = zod.object({
