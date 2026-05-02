@@ -7,6 +7,8 @@ import { useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
+import CheckEmailPage from "@/pages/CheckEmailPage";
+import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import DashboardPage from "@/pages/DashboardPage";
 import TransactionsPage from "@/pages/TransactionsPage";
 import AlertsPage from "@/pages/AlertsPage";
@@ -55,6 +57,12 @@ function AppRoutes() {
       </Route>
       <Route path="/signup">
         {token ? <Redirect to="/dashboard" /> : <SignupPage />}
+      </Route>
+      <Route path="/check-email">
+        <CheckEmailPage />
+      </Route>
+      <Route path="/verify-email">
+        <VerifyEmailPage />
       </Route>
       <Route path="/dashboard">
         <ProtectedRoute component={DashboardPage} />

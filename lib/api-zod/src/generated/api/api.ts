@@ -56,6 +56,35 @@ export const RegisterBody = zod.object({
 });
 
 /**
+ * @summary Verify email address with magic-link token
+ */
+export const VerifyEmailQueryParams = zod.object({
+  token: zod.coerce.string(),
+});
+
+export const VerifyEmailResponse = zod.object({
+  token: zod.string(),
+  user: zod.object({
+    id: zod.number(),
+    email: zod.string(),
+    name: zod.string(),
+    role: zod.enum(["admin", "analyst", "user"]),
+    createdAt: zod.coerce.date(),
+  }),
+});
+
+/**
+ * @summary Resend verification email
+ */
+export const ResendVerificationBody = zod.object({
+  email: zod.string(),
+});
+
+export const ResendVerificationResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
  * @summary Check a transaction for fraud without persisting
  */
 export const CheckFraudBody = zod.object({

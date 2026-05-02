@@ -516,6 +516,23 @@ export interface RiskUserSummary {
   flaggedCount: number;
 }
 
+export type Register201 = {
+  message: string;
+  email: string;
+};
+
+export type VerifyEmailParams = {
+  token: string;
+};
+
+export type ResendVerificationBody = {
+  email: string;
+};
+
+export type ResendVerification200 = {
+  message: string;
+};
+
 export type GetUnreadCount200 = {
   count: number;
 };

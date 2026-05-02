@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useRegister, setAuthTokenGetter } from "@workspace/api-client-react";
+import { useRegister } from "@workspace/api-client-react";
 import { Shield, Eye, EyeOff, User, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,10 +15,8 @@ export default function SignupPage() {
   const registerMutation = useRegister({
     mutation: {
       onSuccess: (data) => {
-        localStorage.setItem("fraud_token", data.token);
-        setAuthTokenGetter(() => data.token);
-        toast.success(`Welcome, ${data.user.name}! Your account has been created.`);
-        setLocation("/dashboard");
+        toast.success("Account created! Check your email for a verification link.");
+        setLocation(`/check-email?email=${encodeURIComponent(data.email)}`);
       },
       onError: (err: any) => {
         const msg = err?.data?.message ?? "Failed to create account";
@@ -153,7 +151,7 @@ export default function SignupPage() {
               disabled={registerMutation.isPending || (!!confirmPassword && confirmPassword !== password)}
               className="w-full bg-primary text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed mt-1"
             >
-              {registerMutation.isPending ? "Creating account..." : "Create account"}
+              {registerMutation.isPending ? "Creating account…" : "Create account"}
             </button>
           </form>
 
