@@ -85,27 +85,33 @@ function FraudScoreBar({ score }: { score: number }) {
 }
 
 export default function DashboardPage() {
-  const summary = useGetAnalyticsSummary({ query: { queryKey: getGetAnalyticsSummaryQueryKey() } });
-  const trend = useGetFraudTrend({ query: { queryKey: getGetFraudTrendQueryKey() } });
-  const distribution = useGetRiskDistribution({ query: { queryKey: getGetRiskDistributionQueryKey() } });
-  const transactions = useListTransactions({ limit: 8, offset: 0 }, { query: { queryKey: getListTransactionsQueryKey({ limit: 8, offset: 0 }) } });
-  const alerts = useListAlerts({ limit: 5, offset: 0, resolved: false }, { query: { queryKey: getListAlertsQueryKey({ limit: 5, offset: 0, resolved: false }) } });
+  const { data: summary } = useGetAnalyticsSummary({ query: { queryKey: getGetAnalyticsSummaryQueryKey() } });
+  const { data: trend } = useGetFraudTrend({ query: { queryKey: getGetFraudTrendQueryKey() } });
+  const { data: distribution } = useGetRiskDistribution({ query: { queryKey: getGetRiskDistributionQueryKey() } });
+  const { data: txData } = useListTransactions({ limit: 8, offset: 0 }, { query: { queryKey: getListTransactionsQueryKey({ limit: 8, offset: 0 }) } });
+  const { data: alertData } = useListAlerts({ limit: 5, offset: 0, resolved: false }, { query: { queryKey: getListAlertsQueryKey({ limit: 5, offset: 0, resolved: false }) } });
 
-  const s = summary;
-  const fraudRate = s ? Math.round((s.fraudRate ?? 0) * 100) : 0;
+  const fraudRate = summary ? Math.round((summary.fraudRate ?? 0) * 100) : 0;
 
-  const trendData = trend?.map((d) => ({
-    date: new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-    total: d.totalTransactions,
-    flagged: d.flaggedCount,
-    blocked: d.blockedCount,
-  })) ?? [];
+  const trendData = Array.isArray(trend)
+    ? trend.map((d) => ({
+        date: new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        total: d.totalTransactions,
+        flagged: d.flaggedCount,
+        blocked: d.blockedCount,
+      }))
+    : [];
 
-  const distData = distribution?.map((d) => ({
-    name: d.riskLevel.charAt(0).toUpperCase() + d.riskLevel.slice(1),
-    value: d.count,
-    color: RISK_COLORS[d.riskLevel] ?? "#6b7280",
-  })) ?? [];
+  const distData = Array.isArray(distribution)
+    ? distribution.map((d) => ({
+        name: d.riskLevel.charAt(0).toUpperCase() + d.riskLevel.slice(1),
+        value: d.count,
+        color: RISK_COLORS[d.riskLevel] ?? "#6b7280",
+      }))
+    : [];
+
+  const transactions = txData?.transactions ?? [];
+  const alerts = alertData?.alerts ?? [];
 
   return (
     <div className="p-6 space-y-6">
@@ -118,34 +124,34 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <StatCard
           label="Total Transactions"
-          value={s?.totalTransactions?.toLocaleString() ?? "—"}
-          sub={`${s?.todayTransactions ?? 0} today`}
+          value={summary?.totalTransactions?.toLocaleString() ?? "—"}
+          sub={`${summary?.todayTransactions ?? 0} today`}
           color="bg-primary/10 text-primary"
           icon={Activity}
         />
         <StatCard
           label="Flagged"
-          value={s?.flaggedTransactions?.toLocaleString() ?? "—"}
+          value={summary?.flaggedTransactions?.toLocaleString() ?? "—"}
           color="bg-amber-500/10 text-amber-400"
           icon={ShieldAlert}
         />
         <StatCard
           label="Blocked"
-          value={s?.blockedTransactions?.toLocaleString() ?? "—"}
+          value={summary?.blockedTransactions?.toLocaleString() ?? "—"}
           color="bg-red-500/10 text-red-400"
           icon={Ban}
         />
         <StatCard
           label="Open Alerts"
-          value={s?.unresolvedAlerts?.toLocaleString() ?? "—"}
-          sub={`${s?.todayAlerts ?? 0} today`}
+          value={summary?.unresolvedAlerts?.toLocaleString() ?? "—"}
+          sub={`${summary?.todayAlerts ?? 0} today`}
           color="bg-orange-500/10 text-orange-400"
           icon={AlertCircle}
         />
         <StatCard
           label="Fraud Rate"
           value={`${fraudRate}%`}
-          sub={`Avg score: ${((s?.averageFraudScore ?? 0) * 100).toFixed(1)}%`}
+          sub={`Avg score: ${((summary?.averageFraudScore ?? 0) * 100).toFixed(1)}%`}
           color="bg-purple-500/10 text-purple-400"
           icon={TrendingUp}
         />
@@ -157,7 +163,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
           <h2 className="text-sm font-semibold text-foreground mb-4">Fraud Trend (30 Days)</h2>
           {trendData.length === 0 ? (
-            <div className="h-44 flex items-center justify-center text-sm text-muted-foreground">No data yet</div>
+            <div className="h-44 flex items-center justify-center text-sm text-muted-foreground">Loading...</div>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
               <AreaChart data={trendData}>
@@ -189,7 +195,7 @@ export default function DashboardPage() {
         <div className="bg-card border border-border rounded-xl p-5">
           <h2 className="text-sm font-semibold text-foreground mb-4">Risk Distribution</h2>
           {distData.length === 0 ? (
-            <div className="h-44 flex items-center justify-center text-sm text-muted-foreground">No data</div>
+            <div className="h-44 flex items-center justify-center text-sm text-muted-foreground">Loading...</div>
           ) : (
             <div className="flex flex-col items-center">
               <ResponsiveContainer width="100%" height={140}>
@@ -217,15 +223,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Transactions + Recent Alerts */}
+      {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Transactions */}
         <div className="lg:col-span-2 bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-5 py-3 border-b border-border">
             <h2 className="text-sm font-semibold text-foreground">Recent Transactions</h2>
           </div>
-          {transactions?.transactions?.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">No transactions yet</div>
+          {transactions.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">Loading...</div>
           ) : (
             <table className="w-full text-sm">
               <thead>
@@ -237,7 +243,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {transactions?.transactions?.map((tx) => (
+                {transactions.map((tx) => (
                   <tr key={tx.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors" data-testid={`row-transaction-${tx.id}`}>
                     <td className="px-5 py-3">
                       <div className="font-medium text-foreground text-xs">{tx.merchantName}</div>
@@ -266,11 +272,11 @@ export default function DashboardPage() {
           <div className="px-5 py-3 border-b border-border">
             <h2 className="text-sm font-semibold text-foreground">Open Alerts</h2>
           </div>
-          {alerts?.alerts?.length === 0 ? (
+          {alerts.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">No open alerts</div>
           ) : (
             <div className="divide-y divide-border/50">
-              {alerts?.alerts?.map((alert) => (
+              {alerts.map((alert) => (
                 <div key={alert.id} className="px-4 py-3" data-testid={`card-alert-${alert.id}`}>
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${SEVERITY_COLORS[alert.severity] ?? ""}`}>

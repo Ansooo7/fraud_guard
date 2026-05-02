@@ -3,7 +3,7 @@ import {
   useListTransactions,
   getListTransactionsQueryKey,
 } from "@workspace/api-client-react";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const STATUS_COLORS: Record<string, string> = {
   approved: "bg-green-500/10 text-green-400 border-green-500/20",
@@ -45,8 +45,8 @@ export default function TransactionsPage() {
   if (statusFilter) params.status = statusFilter;
   if (riskFilter) params.riskLevel = riskFilter;
 
-  const data = useListTransactions(params as any, {
-    query: { queryKey: getListTransactionsQueryKey(params as any) },
+  const { data, isLoading } = useListTransactions(params as never, {
+    query: { queryKey: getListTransactionsQueryKey(params as never) },
   });
 
   const transactions = data?.transactions ?? [];
@@ -64,34 +64,29 @@ export default function TransactionsPage() {
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <select
-            data-testid="select-status"
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
-            className="bg-card border border-border text-sm text-foreground rounded-lg pl-8 pr-8 py-2 focus:outline-none focus:ring-1 focus:ring-ring appearance-none cursor-pointer"
-          >
-            <option value="">All statuses</option>
-            <option value="approved">Approved</option>
-            <option value="flagged">Flagged</option>
-            <option value="blocked">Blocked</option>
-          </select>
-        </div>
-        <div className="relative">
-          <select
-            data-testid="select-risk"
-            value={riskFilter}
-            onChange={(e) => { setRiskFilter(e.target.value); setPage(0); }}
-            className="bg-card border border-border text-sm text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring appearance-none cursor-pointer"
-          >
-            <option value="">All risk levels</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="critical">Critical</option>
-          </select>
-        </div>
+        <select
+          data-testid="select-status"
+          value={statusFilter}
+          onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
+          className="bg-card border border-border text-sm text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring appearance-none cursor-pointer"
+        >
+          <option value="">All statuses</option>
+          <option value="approved">Approved</option>
+          <option value="flagged">Flagged</option>
+          <option value="blocked">Blocked</option>
+        </select>
+        <select
+          data-testid="select-risk"
+          value={riskFilter}
+          onChange={(e) => { setRiskFilter(e.target.value); setPage(0); }}
+          className="bg-card border border-border text-sm text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring appearance-none cursor-pointer"
+        >
+          <option value="">All risk levels</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="critical">Critical</option>
+        </select>
         {(statusFilter || riskFilter) && (
           <button
             data-testid="button-clear-filters"
@@ -120,11 +115,13 @@ export default function TransactionsPage() {
             </tr>
           </thead>
           <tbody>
-            {transactions.length === 0 ? (
+            {isLoading ? (
               <tr>
-                <td colSpan={9} className="text-center py-12 text-sm text-muted-foreground">
-                  No transactions found
-                </td>
+                <td colSpan={9} className="text-center py-12 text-sm text-muted-foreground">Loading...</td>
+              </tr>
+            ) : transactions.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="text-center py-12 text-sm text-muted-foreground">No transactions found</td>
               </tr>
             ) : (
               transactions.map((tx) => (

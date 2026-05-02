@@ -31,8 +31,8 @@ export default function AlertsPage() {
   if (severityFilter) params.severity = severityFilter;
   if (resolvedFilter !== "") params.resolved = resolvedFilter === "true";
 
-  const data = useListAlerts(params as any, {
-    query: { queryKey: getListAlertsQueryKey(params as any) },
+  const { data, isLoading } = useListAlerts(params as never, {
+    query: { queryKey: getListAlertsQueryKey(params as never) },
   });
 
   const resolveAlert = useResolveAlert({
@@ -96,7 +96,11 @@ export default function AlertsPage() {
 
       {/* Alerts List */}
       <div className="space-y-2">
-        {alerts.length === 0 ? (
+        {isLoading ? (
+          <div className="bg-card border border-border rounded-xl p-12 text-center text-sm text-muted-foreground">
+            Loading...
+          </div>
+        ) : alerts.length === 0 ? (
           <div className="bg-card border border-border rounded-xl p-12 text-center text-sm text-muted-foreground">
             No alerts found
           </div>

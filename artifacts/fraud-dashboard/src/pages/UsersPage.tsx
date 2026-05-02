@@ -8,15 +8,13 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function UsersPage() {
-  const users = useListUsers({ query: { queryKey: getListUsersQueryKey() } });
+  const { data: users, isLoading } = useListUsers({ query: { queryKey: getListUsersQueryKey() } });
 
   return (
     <div className="p-6 space-y-5">
-      <div className="flex items-center gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Users</h1>
-          <p className="text-sm text-muted-foreground">{users?.length ?? 0} registered users</p>
-        </div>
+      <div>
+        <h1 className="text-xl font-bold text-foreground">Users</h1>
+        <p className="text-sm text-muted-foreground">{users?.length ?? 0} registered users</p>
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -30,7 +28,11 @@ export default function UsersPage() {
             </tr>
           </thead>
           <tbody>
-            {!users || users.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={4} className="text-center py-12 text-sm text-muted-foreground">Loading...</td>
+              </tr>
+            ) : !users || users.length === 0 ? (
               <tr>
                 <td colSpan={4} className="text-center py-12 text-sm text-muted-foreground">No users found</td>
               </tr>

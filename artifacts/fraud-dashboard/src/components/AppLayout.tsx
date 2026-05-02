@@ -59,7 +59,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       };
 
       ws.onerror = () => {
-        // silent — ws may not be available in all environments
+        // silent
       };
     };
 
@@ -93,18 +93,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {navItems.map(({ href, label, icon: Icon }) => {
             const active = location.startsWith(href);
             return (
-              <Link key={href} href={href}>
-                <a
-                  data-testid={`nav-${label.toLowerCase()}`}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    active
-                      ? "bg-sidebar-accent text-sidebar-foreground"
-                      : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  {label}
-                </a>
+              <Link
+                key={href}
+                href={href}
+                data-testid={`nav-${label.toLowerCase()}`}
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-sidebar-accent text-sidebar-foreground"
+                    : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                }`}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                {label}
               </Link>
             );
           })}

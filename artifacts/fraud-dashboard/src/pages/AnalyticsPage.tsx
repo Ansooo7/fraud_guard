@@ -43,25 +43,30 @@ function RiskScoreBar({ score }: { score: number }) {
 }
 
 export default function AnalyticsPage() {
-  const trend = useGetFraudTrend({ query: { queryKey: getGetFraudTrendQueryKey() } });
-  const distribution = useGetRiskDistribution({ query: { queryKey: getGetRiskDistributionQueryKey() } });
-  const topUsers = useGetTopRiskUsers({ query: { queryKey: getGetTopRiskUsersQueryKey() } });
-  const summary = useGetAnalyticsSummary({ query: { queryKey: getGetAnalyticsSummaryQueryKey() } });
+  const { data: trend } = useGetFraudTrend({ query: { queryKey: getGetFraudTrendQueryKey() } });
+  const { data: distribution } = useGetRiskDistribution({ query: { queryKey: getGetRiskDistributionQueryKey() } });
+  const { data: topUsers } = useGetTopRiskUsers({ query: { queryKey: getGetTopRiskUsersQueryKey() } });
+  const { data: summary } = useGetAnalyticsSummary({ query: { queryKey: getGetAnalyticsSummaryQueryKey() } });
 
-  const trendData = trend?.map((d) => ({
-    date: new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-    total: d.totalTransactions,
-    flagged: d.flaggedCount,
-    blocked: d.blockedCount,
-    rate: Math.round(d.fraudRate * 100),
-  })) ?? [];
+  const trendData = Array.isArray(trend)
+    ? trend.map((d) => ({
+        date: new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        total: d.totalTransactions,
+        flagged: d.flaggedCount,
+        blocked: d.blockedCount,
+      }))
+    : [];
 
-  const distData = distribution?.map((d) => ({
-    name: d.riskLevel.charAt(0).toUpperCase() + d.riskLevel.slice(1),
-    value: d.count,
-    pct: d.percentage,
-    color: RISK_COLORS[d.riskLevel] ?? "#6b7280",
-  })) ?? [];
+  const distData = Array.isArray(distribution)
+    ? distribution.map((d) => ({
+        name: d.riskLevel.charAt(0).toUpperCase() + d.riskLevel.slice(1),
+        value: d.count,
+        pct: d.percentage,
+        color: RISK_COLORS[d.riskLevel] ?? "#6b7280",
+      }))
+    : [];
+
+  const users = Array.isArray(topUsers) ? topUsers : [];
 
   return (
     <div className="p-6 space-y-6">
@@ -91,7 +96,7 @@ export default function AnalyticsPage() {
       <div className="bg-card border border-border rounded-xl p-5">
         <h2 className="text-sm font-semibold text-foreground mb-4">Fraud Trend — 30 Days</h2>
         {trendData.length === 0 ? (
-          <div className="h-56 flex items-center justify-center text-sm text-muted-foreground">No data</div>
+          <div className="h-56 flex items-center justify-center text-sm text-muted-foreground">Loading...</div>
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={trendData}>
@@ -130,7 +135,7 @@ export default function AnalyticsPage() {
         <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
           <h2 className="text-sm font-semibold text-foreground mb-4">Risk Distribution</h2>
           {distData.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">No data</div>
+            <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">Loading...</div>
           ) : (
             <div className="flex flex-col items-center">
               <ResponsiveContainer width="100%" height={180}>
@@ -163,8 +168,8 @@ export default function AnalyticsPage() {
           <div className="px-5 py-3 border-b border-border">
             <h2 className="text-sm font-semibold text-foreground">Top Risk Users</h2>
           </div>
-          {!topUsers || topUsers.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">No data</div>
+          {users.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">Loading...</div>
           ) : (
             <table className="w-full text-sm">
               <thead>
@@ -176,7 +181,7 @@ export default function AnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {topUsers.map((u) => (
+                {users.map((u) => (
                   <tr key={u.userId} className="border-b border-border/50 hover:bg-muted/20 transition-colors" data-testid={`row-user-${u.userId}`}>
                     <td className="px-5 py-3">
                       <div className="text-xs font-medium text-foreground">{u.userName}</div>

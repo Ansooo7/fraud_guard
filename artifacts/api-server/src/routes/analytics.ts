@@ -59,7 +59,7 @@ router.get("/analytics/fraud-trend", requireAuth, async (req, res) => {
     ORDER BY date ASC
   `);
 
-  const trend = (rows as any[]).map((r) => ({
+  const trend = ((rows as any).rows ?? rows as any[]).map((r: any) => ({
     date: String(r.date),
     totalTransactions: Number(r.total_transactions),
     flaggedCount: Number(r.flagged_count),
