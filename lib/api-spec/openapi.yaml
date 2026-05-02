@@ -253,6 +253,145 @@ paths:
               schema:
                 $ref: "#/components/schemas/FraudCheckResult"
 
+  /search:
+    get:
+      operationId: globalSearch
+      tags: [auth]
+      summary: Search across transactions, alerts, and cases
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+
+  /blocklist:
+    get:
+      operationId: listBlocklist
+      tags: [auth]
+      summary: List all blocklist/allowlist entries
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: entityType
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Blocklist entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BlocklistEntry"
+                  total:
+                    type: integer
+                required: [entries, total]
+    post:
+      operationId: createBlocklistEntry
+      tags: [auth]
+      summary: Add an entity to the blocklist or allowlist
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBlocklistBody"
+      responses:
+        "201":
+          description: Entry created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlocklistEntry"
+
+  /blocklist/{id}:
+    patch:
+      operationId: updateBlocklistEntry
+      tags: [auth]
+      summary: Update a blocklist entry (toggle active, change reason)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                active:
+                  type: boolean
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Updated entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlocklistEntry"
+    delete:
+      operationId: deleteBlocklistEntry
+      tags: [auth]
+      summary: Delete a blocklist entry
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required: [message]
+
   /fraud/batch:
     post:
       operationId: batchCheckFraud
@@ -1640,3 +1779,82 @@ components:
         - riskScore
         - transactionCount
         - flaggedCount
+
+    SearchResultItem:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [transaction, alert, case]
+        id:
+          type: integer
+        title:
+          type: string
+        subtitle:
+          type: string
+        badge:
+          type: string
+        badgeColor:
+          type: string
+        href:
+          type: string
+        createdAt:
+          type: string
+      required: [type, id, title, subtitle, href, createdAt]
+
+    SearchResults:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResultItem"
+        total:
+          type: integer
+      required: [results, total]
+
+    BlocklistEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        entityType:
+          type: string
+        entityValue:
+          type: string
+        action:
+          type: string
+          enum: [block, allow]
+        reason:
+          type: string
+          nullable: true
+        createdBy:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+        hitCount:
+          type: integer
+        lastHitAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, entityType, entityValue, action, active, hitCount, createdAt, updatedAt]
+
+    CreateBlocklistBody:
+      type: object
+      properties:
+        entityType:
+          type: string
+          enum: [merchant_id, bin, ip, email, device_id]
+        entityValue:
+          type: string
+        action:
+          type: string
+          enum: [block, allow]
+        reason:
+          type: string
+      required: [entityType, entityValue, action]

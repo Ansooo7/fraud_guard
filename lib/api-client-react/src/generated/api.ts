@@ -23,11 +23,14 @@ import type {
   AppNotification,
   BatchFraudCheckBody,
   BatchFraudCheckResult,
+  BlocklistEntry,
   CaseNote,
+  CreateBlocklistBody,
   CreateCaseBody,
   CreateRuleBody,
   CreateTransactionBody,
   DailyTrendPoint,
+  DeleteBlocklistEntry200,
   ErrorResponse,
   FraudAlert,
   FraudCase,
@@ -35,8 +38,11 @@ import type {
   FraudCheckResult,
   FraudRule,
   GetUnreadCount200,
+  GlobalSearchParams,
   HealthStatus,
   ListAlertsParams,
+  ListBlocklist200,
+  ListBlocklistParams,
   ListCasesParams,
   ListTransactionsParams,
   LoginBody,
@@ -51,8 +57,10 @@ import type {
   ResolveAlertBody,
   RiskDistributionPoint,
   RiskUserSummary,
+  SearchResults,
   TransactionListResponse,
   TransactionWithAnalysis,
+  UpdateBlocklistEntryBody,
   UpdateCaseBody,
   UpdateRuleBody,
   User,
@@ -815,6 +823,452 @@ export const useCheckFraud = <
   TContext
 > => {
   return useMutation(getCheckFraudMutationOptions(options));
+};
+
+/**
+ * @summary Search across transactions, alerts, and cases
+ */
+export const getGlobalSearchUrl = (params: GlobalSearchParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/search?${stringifiedParams}`
+    : `/api/search`;
+};
+
+export const globalSearch = async (
+  params: GlobalSearchParams,
+  options?: RequestInit,
+): Promise<SearchResults> => {
+  return customFetch<SearchResults>(getGlobalSearchUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGlobalSearchQueryKey = (params?: GlobalSearchParams) => {
+  return [`/api/search`, ...(params ? [params] : [])] as const;
+};
+
+export const getGlobalSearchQueryOptions = <
+  TData = Awaited<ReturnType<typeof globalSearch>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GlobalSearchParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof globalSearch>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGlobalSearchQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof globalSearch>>> = ({
+    signal,
+  }) => globalSearch(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof globalSearch>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GlobalSearchQueryResult = NonNullable<
+  Awaited<ReturnType<typeof globalSearch>>
+>;
+export type GlobalSearchQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Search across transactions, alerts, and cases
+ */
+
+export function useGlobalSearch<
+  TData = Awaited<ReturnType<typeof globalSearch>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GlobalSearchParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof globalSearch>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGlobalSearchQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all blocklist/allowlist entries
+ */
+export const getListBlocklistUrl = (params?: ListBlocklistParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/blocklist?${stringifiedParams}`
+    : `/api/blocklist`;
+};
+
+export const listBlocklist = async (
+  params?: ListBlocklistParams,
+  options?: RequestInit,
+): Promise<ListBlocklist200> => {
+  return customFetch<ListBlocklist200>(getListBlocklistUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListBlocklistQueryKey = (params?: ListBlocklistParams) => {
+  return [`/api/blocklist`, ...(params ? [params] : [])] as const;
+};
+
+export const getListBlocklistQueryOptions = <
+  TData = Awaited<ReturnType<typeof listBlocklist>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListBlocklistParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listBlocklist>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListBlocklistQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listBlocklist>>> = ({
+    signal,
+  }) => listBlocklist(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listBlocklist>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListBlocklistQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listBlocklist>>
+>;
+export type ListBlocklistQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all blocklist/allowlist entries
+ */
+
+export function useListBlocklist<
+  TData = Awaited<ReturnType<typeof listBlocklist>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListBlocklistParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listBlocklist>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListBlocklistQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add an entity to the blocklist or allowlist
+ */
+export const getCreateBlocklistEntryUrl = () => {
+  return `/api/blocklist`;
+};
+
+export const createBlocklistEntry = async (
+  createBlocklistBody: CreateBlocklistBody,
+  options?: RequestInit,
+): Promise<BlocklistEntry> => {
+  return customFetch<BlocklistEntry>(getCreateBlocklistEntryUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createBlocklistBody),
+  });
+};
+
+export const getCreateBlocklistEntryMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createBlocklistEntry>>,
+    TError,
+    { data: BodyType<CreateBlocklistBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createBlocklistEntry>>,
+  TError,
+  { data: BodyType<CreateBlocklistBody> },
+  TContext
+> => {
+  const mutationKey = ["createBlocklistEntry"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createBlocklistEntry>>,
+    { data: BodyType<CreateBlocklistBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createBlocklistEntry(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateBlocklistEntryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createBlocklistEntry>>
+>;
+export type CreateBlocklistEntryMutationBody = BodyType<CreateBlocklistBody>;
+export type CreateBlocklistEntryMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add an entity to the blocklist or allowlist
+ */
+export const useCreateBlocklistEntry = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createBlocklistEntry>>,
+    TError,
+    { data: BodyType<CreateBlocklistBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createBlocklistEntry>>,
+  TError,
+  { data: BodyType<CreateBlocklistBody> },
+  TContext
+> => {
+  return useMutation(getCreateBlocklistEntryMutationOptions(options));
+};
+
+/**
+ * @summary Update a blocklist entry (toggle active, change reason)
+ */
+export const getUpdateBlocklistEntryUrl = (id: number) => {
+  return `/api/blocklist/${id}`;
+};
+
+export const updateBlocklistEntry = async (
+  id: number,
+  updateBlocklistEntryBody: UpdateBlocklistEntryBody,
+  options?: RequestInit,
+): Promise<BlocklistEntry> => {
+  return customFetch<BlocklistEntry>(getUpdateBlocklistEntryUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateBlocklistEntryBody),
+  });
+};
+
+export const getUpdateBlocklistEntryMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateBlocklistEntry>>,
+    TError,
+    { id: number; data: BodyType<UpdateBlocklistEntryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateBlocklistEntry>>,
+  TError,
+  { id: number; data: BodyType<UpdateBlocklistEntryBody> },
+  TContext
+> => {
+  const mutationKey = ["updateBlocklistEntry"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateBlocklistEntry>>,
+    { id: number; data: BodyType<UpdateBlocklistEntryBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateBlocklistEntry(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateBlocklistEntryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateBlocklistEntry>>
+>;
+export type UpdateBlocklistEntryMutationBody =
+  BodyType<UpdateBlocklistEntryBody>;
+export type UpdateBlocklistEntryMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a blocklist entry (toggle active, change reason)
+ */
+export const useUpdateBlocklistEntry = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateBlocklistEntry>>,
+    TError,
+    { id: number; data: BodyType<UpdateBlocklistEntryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateBlocklistEntry>>,
+  TError,
+  { id: number; data: BodyType<UpdateBlocklistEntryBody> },
+  TContext
+> => {
+  return useMutation(getUpdateBlocklistEntryMutationOptions(options));
+};
+
+/**
+ * @summary Delete a blocklist entry
+ */
+export const getDeleteBlocklistEntryUrl = (id: number) => {
+  return `/api/blocklist/${id}`;
+};
+
+export const deleteBlocklistEntry = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteBlocklistEntry200> => {
+  return customFetch<DeleteBlocklistEntry200>(getDeleteBlocklistEntryUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteBlocklistEntryMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteBlocklistEntry>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteBlocklistEntry>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteBlocklistEntry"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteBlocklistEntry>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteBlocklistEntry(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteBlocklistEntryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteBlocklistEntry>>
+>;
+
+export type DeleteBlocklistEntryMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a blocklist entry
+ */
+export const useDeleteBlocklistEntry = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteBlocklistEntry>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteBlocklistEntry>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteBlocklistEntryMutationOptions(options));
 };
 
 /**

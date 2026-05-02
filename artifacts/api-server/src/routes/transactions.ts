@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { transactionsTable, usersTable, fraudAlertsTable, riskProfilesTable } from "@workspace/db";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { transactionsTable, usersTable, fraudAlertsTable, riskProfilesTable, entityBlocklistTable } from "@workspace/db";
+import { eq, desc, sql, and, gte, or } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { analyzeFraud } from "../lib/fraud-engine";
 import { broadcastAlert, broadcastTransaction } from "../lib/websocket";
@@ -67,7 +67,43 @@ router.post("/transactions", requireAuth, async (req, res) => {
   const data = parsed.data;
 
   // Get user risk profile
-  const [profile] = await db.select().from(riskProfilesTable).where(eq(riskProfilesTable.userId, data.userId)).limit(1);
+  const now = new Date();
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+  const tenMinAgo = new Date(now.getTime() - 10 * 60 * 1000);
+
+  const [profile, velocityHour, velocityTenMin, blocklistHits] = await Promise.all([
+    db.select().from(riskProfilesTable).where(eq(riskProfilesTable.userId, data.userId)).limit(1).then((r) => r[0]),
+    db.select({ count: sql<number>`count(*)::int` }).from(transactionsTable)
+      .where(and(eq(transactionsTable.userId, data.userId), gte(transactionsTable.createdAt, oneHourAgo)))
+      .then((r) => r[0]?.count ?? 0),
+    db.select({ count: sql<number>`count(*)::int` }).from(transactionsTable)
+      .where(and(eq(transactionsTable.userId, data.userId), gte(transactionsTable.createdAt, tenMinAgo)))
+      .then((r) => r[0]?.count ?? 0),
+    db.select().from(entityBlocklistTable)
+      .where(
+        and(
+          eq(entityBlocklistTable.active, true),
+          or(
+            ...[
+              data.ipAddress ? and(eq(entityBlocklistTable.entityType, "ip"), eq(entityBlocklistTable.entityValue, data.ipAddress)) : undefined,
+              data.deviceId ? and(eq(entityBlocklistTable.entityType, "device_id"), eq(entityBlocklistTable.entityValue, data.deviceId)) : undefined,
+            ].filter(Boolean) as any[],
+          )
+        )
+      )
+      .limit(5),
+  ]);
+
+  const blocklistHit = blocklistHits.some((h) => h.action === "block");
+  const allowlistHit = blocklistHits.some((h) => h.action === "allow");
+
+  // Update hit counts for matched entries
+  for (const hit of blocklistHits) {
+    db.update(entityBlocklistTable)
+      .set({ hitCount: hit.hitCount + 1, lastHitAt: now })
+      .where(eq(entityBlocklistTable.id, hit.id))
+      .catch(() => { /* fire and forget */ });
+  }
 
   const analysis = analyzeFraud({
     amount: Number(data.amount),
@@ -75,11 +111,16 @@ router.post("/transactions", requireAuth, async (req, res) => {
     location: data.location,
     deviceId: data.deviceId ?? undefined,
     merchantCategory: data.merchantCategory ?? undefined,
+    ipAddress: data.ipAddress ?? undefined,
     userTransactionCount: profile?.transactionCount ?? 0,
     userAvgAmount: profile?.avgTransactionAmount ?? 0,
     userUniqueLocations: profile?.uniqueLocations ?? 0,
     userUniqueDevices: profile?.uniqueDevices ?? 0,
     userFlaggedCount: profile?.flaggedCount ?? 0,
+    velocityLastHour: velocityHour,
+    velocityLast10Min: velocityTenMin,
+    blocklistHit,
+    allowlistHit,
   });
 
   const [tx] = await db.insert(transactionsTable).values({

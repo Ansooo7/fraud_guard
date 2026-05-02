@@ -3,7 +3,8 @@ import {
   useListTransactions,
   getListTransactionsQueryKey,
 } from "@workspace/api-client-react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, Trash2 } from "lucide-react";
+import { useFilterPresets } from "@/hooks/useFilterPresets";
 
 const STATUS_COLORS: Record<string, string> = {
   approved: "bg-green-500/10 text-green-400 border-green-500/20",
@@ -37,6 +38,10 @@ export default function TransactionsPage() {
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [riskFilter, setRiskFilter] = useState<string>("");
+  const [presetName, setPresetName] = useState("");
+  const [showSaveInput, setShowSaveInput] = useState(false);
+
+  const { presets, savePreset, deletePreset } = useFilterPresets("transactions");
 
   const params: Record<string, unknown> = {
     limit: PAGE_SIZE,
@@ -53,6 +58,22 @@ export default function TransactionsPage() {
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const hasFilters = !!(statusFilter || riskFilter);
+
+  function applyPreset(preset: { filters: Record<string, string> }) {
+    setStatusFilter(preset.filters.status ?? "");
+    setRiskFilter(preset.filters.riskLevel ?? "");
+    setPage(0);
+  }
+
+  function handleSavePreset(e: React.FormEvent) {
+    e.preventDefault();
+    if (!presetName.trim()) return;
+    savePreset(presetName.trim(), { status: statusFilter, riskLevel: riskFilter });
+    setPresetName("");
+    setShowSaveInput(false);
+  }
+
   return (
     <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
@@ -62,7 +83,7 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters row */}
       <div className="flex items-center gap-3 flex-wrap">
         <select
           data-testid="select-status"
@@ -87,7 +108,8 @@ export default function TransactionsPage() {
           <option value="high">High</option>
           <option value="critical">Critical</option>
         </select>
-        {(statusFilter || riskFilter) && (
+
+        {hasFilters && (
           <button
             data-testid="button-clear-filters"
             onClick={() => { setStatusFilter(""); setRiskFilter(""); setPage(0); }}
@@ -96,7 +118,62 @@ export default function TransactionsPage() {
             Clear filters
           </button>
         )}
+
+        {/* Save preset button */}
+        {hasFilters && !showSaveInput && (
+          <button
+            onClick={() => setShowSaveInput(true)}
+            className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition"
+          >
+            <Bookmark className="w-3.5 h-3.5" />
+            Save as preset
+          </button>
+        )}
+
+        {showSaveInput && (
+          <form onSubmit={handleSavePreset} className="flex items-center gap-2">
+            <input
+              autoFocus
+              type="text"
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              placeholder="Preset name…"
+              className="bg-card border border-border text-sm text-foreground rounded-lg px-3 py-1.5 w-36 focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+            <button type="submit" className="text-xs text-primary hover:text-primary/80 font-medium transition">
+              Save
+            </button>
+            <button type="button" onClick={() => setShowSaveInput(false)} className="text-xs text-muted-foreground hover:text-foreground transition">
+              Cancel
+            </button>
+          </form>
+        )}
       </div>
+
+      {/* Saved presets */}
+      {presets.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <BookmarkCheck className="w-3 h-3" /> Saved presets:
+          </span>
+          {presets.map((p) => (
+            <div key={p.id} className="flex items-center gap-0.5">
+              <button
+                onClick={() => applyPreset(p)}
+                className="text-xs px-2.5 py-1 rounded-l-md bg-muted/60 border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
+              >
+                {p.name}
+              </button>
+              <button
+                onClick={() => deletePreset(p.id)}
+                className="text-xs px-1.5 py-1 rounded-r-md bg-muted/60 border border-l-0 border-border text-muted-foreground/50 hover:text-red-400 transition"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">

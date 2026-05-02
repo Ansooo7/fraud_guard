@@ -7,3 +7,4 @@ export * from "./fraud_cases";
 export * from "./notifications";
 export * from "./email_verification_tokens";
 export * from "./login_otps";
+export * from "./entity_blocklist";

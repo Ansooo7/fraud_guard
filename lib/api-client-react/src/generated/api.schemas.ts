@@ -516,6 +516,79 @@ export interface RiskUserSummary {
   flaggedCount: number;
 }
 
+export type SearchResultItemType =
+  (typeof SearchResultItemType)[keyof typeof SearchResultItemType];
+
+export const SearchResultItemType = {
+  transaction: "transaction",
+  alert: "alert",
+  case: "case",
+} as const;
+
+export interface SearchResultItem {
+  type: SearchResultItemType;
+  id: number;
+  title: string;
+  subtitle: string;
+  badge?: string;
+  badgeColor?: string;
+  href: string;
+  createdAt: string;
+}
+
+export interface SearchResults {
+  results: SearchResultItem[];
+  total: number;
+}
+
+export type BlocklistEntryAction =
+  (typeof BlocklistEntryAction)[keyof typeof BlocklistEntryAction];
+
+export const BlocklistEntryAction = {
+  block: "block",
+  allow: "allow",
+} as const;
+
+export interface BlocklistEntry {
+  id: number;
+  entityType: string;
+  entityValue: string;
+  action: BlocklistEntryAction;
+  reason?: string | null;
+  createdBy?: string | null;
+  active: boolean;
+  hitCount: number;
+  lastHitAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateBlocklistBodyEntityType =
+  (typeof CreateBlocklistBodyEntityType)[keyof typeof CreateBlocklistBodyEntityType];
+
+export const CreateBlocklistBodyEntityType = {
+  merchant_id: "merchant_id",
+  bin: "bin",
+  ip: "ip",
+  email: "email",
+  device_id: "device_id",
+} as const;
+
+export type CreateBlocklistBodyAction =
+  (typeof CreateBlocklistBodyAction)[keyof typeof CreateBlocklistBodyAction];
+
+export const CreateBlocklistBodyAction = {
+  block: "block",
+  allow: "allow",
+} as const;
+
+export interface CreateBlocklistBody {
+  entityType: CreateBlocklistBodyEntityType;
+  entityValue: string;
+  action: CreateBlocklistBodyAction;
+  reason?: string;
+}
+
 export type Register201 = {
   message: string;
   email: string;
@@ -547,6 +620,32 @@ export type RequestOtp200 = {
 export type VerifyOtpBody = {
   email: string;
   code: string;
+};
+
+export type GlobalSearchParams = {
+  q: string;
+  limit?: number;
+};
+
+export type ListBlocklistParams = {
+  entityType?: string;
+  action?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export type ListBlocklist200 = {
+  entries: BlocklistEntry[];
+  total: number;
+};
+
+export type UpdateBlocklistEntryBody = {
+  active?: boolean;
+  reason?: string;
+};
+
+export type DeleteBlocklistEntry200 = {
+  message: string;
 };
 
 export type GetUnreadCount200 = {

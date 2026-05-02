@@ -141,6 +141,106 @@ export const CheckFraudResponse = zod.object({
 });
 
 /**
+ * @summary Search across transactions, alerts, and cases
+ */
+export const GlobalSearchQueryParams = zod.object({
+  q: zod.coerce.string(),
+  limit: zod.coerce.number().optional(),
+});
+
+export const GlobalSearchResponse = zod.object({
+  results: zod.array(
+    zod.object({
+      type: zod.enum(["transaction", "alert", "case"]),
+      id: zod.number(),
+      title: zod.string(),
+      subtitle: zod.string(),
+      badge: zod.string().optional(),
+      badgeColor: zod.string().optional(),
+      href: zod.string(),
+      createdAt: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+});
+
+/**
+ * @summary List all blocklist/allowlist entries
+ */
+export const ListBlocklistQueryParams = zod.object({
+  entityType: zod.coerce.string().optional(),
+  action: zod.coerce.string().optional(),
+  limit: zod.coerce.number().optional(),
+  offset: zod.coerce.number().optional(),
+});
+
+export const ListBlocklistResponse = zod.object({
+  entries: zod.array(
+    zod.object({
+      id: zod.number(),
+      entityType: zod.string(),
+      entityValue: zod.string(),
+      action: zod.enum(["block", "allow"]),
+      reason: zod.string().nullish(),
+      createdBy: zod.string().nullish(),
+      active: zod.boolean(),
+      hitCount: zod.number(),
+      lastHitAt: zod.string().nullish(),
+      createdAt: zod.string(),
+      updatedAt: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+});
+
+/**
+ * @summary Add an entity to the blocklist or allowlist
+ */
+export const CreateBlocklistEntryBody = zod.object({
+  entityType: zod.enum(["merchant_id", "bin", "ip", "email", "device_id"]),
+  entityValue: zod.string(),
+  action: zod.enum(["block", "allow"]),
+  reason: zod.string().optional(),
+});
+
+/**
+ * @summary Update a blocklist entry (toggle active, change reason)
+ */
+export const UpdateBlocklistEntryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateBlocklistEntryBody = zod.object({
+  active: zod.boolean().optional(),
+  reason: zod.string().optional(),
+});
+
+export const UpdateBlocklistEntryResponse = zod.object({
+  id: zod.number(),
+  entityType: zod.string(),
+  entityValue: zod.string(),
+  action: zod.enum(["block", "allow"]),
+  reason: zod.string().nullish(),
+  createdBy: zod.string().nullish(),
+  active: zod.boolean(),
+  hitCount: zod.number(),
+  lastHitAt: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Delete a blocklist entry
+ */
+export const DeleteBlocklistEntryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteBlocklistEntryResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
  * @summary Run fraud checks on multiple transactions at once
  */
 export const batchCheckFraudBodyTransactionsMax = 500;

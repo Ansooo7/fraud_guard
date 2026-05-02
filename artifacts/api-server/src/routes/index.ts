@@ -11,6 +11,8 @@ import rulesRouter from "./rules";
 import casesRouter from "./cases";
 import notificationsRouter from "./notifications";
 import otpRouter from "./otp";
+import searchRouter from "./search";
+import blocklistRouter from "./blocklist";
 
 const router: IRouter = Router();
 
@@ -26,5 +28,7 @@ router.use(rulesRouter);
 router.use(casesRouter);
 router.use(notificationsRouter);
 router.use(otpRouter);
+router.use(searchRouter);
+router.use(blocklistRouter);
 
 export default router;

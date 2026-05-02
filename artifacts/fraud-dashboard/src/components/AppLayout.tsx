@@ -21,8 +21,10 @@ import {
   Layers,
   SlidersHorizontal,
   FolderOpen,
+  ShieldOff,
 } from "lucide-react";
 import NotificationBell from "./NotificationBell";
+import GlobalSearch from "./GlobalSearch";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -30,6 +32,7 @@ const navItems = [
   { href: "/fraud-batch", label: "Batch Check", icon: Layers },
   { href: "/cases", label: "Cases", icon: FolderOpen },
   { href: "/rules", label: "Rule Engine", icon: SlidersHorizontal },
+  { href: "/blocklist", label: "Blocklist", icon: ShieldOff },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/alerts", label: "Alerts", icon: ShieldAlert },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
@@ -53,7 +56,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       wsRef.current = ws;
 
       ws.onopen = () => {
-        // Authenticate so the server can route user-specific notifications
         ws.send(JSON.stringify({ type: "auth", token }));
       };
 
@@ -70,10 +72,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           } else if (msg.type === "new_transaction") {
             queryClient.invalidateQueries({ queryKey: getListTransactionsQueryKey() });
           } else if (msg.type === "notification") {
-            // Real-time push: invalidate notification queries
             queryClient.invalidateQueries({ queryKey: getListNotificationsQueryKey() });
             queryClient.invalidateQueries({ queryKey: getGetUnreadCountQueryKey() });
-            // Show a toast for the incoming notification
             const n = msg.data;
             if (n?.title) {
               toast.info(n.title, {
@@ -125,7 +125,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Link
                 key={href}
                 href={href}
-                data-testid={`nav-${label.toLowerCase()}`}
+                data-testid={`nav-${label.toLowerCase().replace(/\s/g, "-")}`}
                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   active
                     ? "bg-sidebar-accent text-sidebar-foreground"
@@ -154,8 +154,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar with notification bell */}
-        <header className="h-14 border-b border-border flex items-center justify-end px-5 flex-shrink-0 bg-background">
+        {/* Top bar */}
+        <header className="h-14 border-b border-border flex items-center justify-between px-5 flex-shrink-0 bg-background gap-4">
+          <GlobalSearch />
           <NotificationBell />
         </header>
 
