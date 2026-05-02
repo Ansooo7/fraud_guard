@@ -1,34 +1,37 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useRegister } from "@workspace/api-client-react";
-import { Shield, Eye, EyeOff, User, Mail, Lock } from "lucide-react";
+import { useRegister, setAuthTokenGetter } from "@workspace/api-client-react";
+import { Shield, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import CaptchaWidget from "@/components/CaptchaWidget";
 
 export default function SignupPage() {
   const [, setLocation] = useLocation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaPassed, setCaptchaPassed] = useState(false);
 
   const registerMutation = useRegister({
     mutation: {
-      onSuccess: (data) => {
-        toast.success("Account created! Check your email for a verification link.");
-        setLocation(`/check-email?email=${encodeURIComponent(data.email)}`);
+      onSuccess: (data: any) => {
+        localStorage.setItem("fraud_token", data.token);
+        setAuthTokenGetter(() => data.token);
+        toast.success(`Welcome, ${data.user.name}!`);
+        setLocation("/dashboard");
       },
       onError: (err: any) => {
-        const msg = err?.data?.message ?? "Failed to create account";
-        toast.error(msg);
+        toast.error(err?.data?.message ?? "Failed to create account");
+        setCaptchaPassed(false);
       },
     },
   });
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+    if (!captchaPassed) {
+      toast.error("Please complete the human verification first.");
       return;
     }
     if (password.length < 6) {
@@ -47,65 +50,50 @@ export default function SignupPage() {
             <Shield className="w-7 h-7 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">FraudGuard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Create your account</p>
+          <p className="text-sm text-muted-foreground mt-1">Banking Fraud Detection System</p>
         </div>
 
         {/* Card */}
-        <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
-          <h2 className="text-lg font-semibold text-foreground mb-5">Sign up</h2>
+        <div className="bg-card border border-border rounded-xl shadow-lg p-6 space-y-4">
+          <div className="mb-2">
+            <h2 className="text-base font-semibold text-foreground">Create account</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Fill in the details below to get started</p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name */}
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                Full name
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  data-testid="input-name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-background border border-input rounded-lg pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
-                  placeholder="Jane Smith"
-                  required
-                />
-              </div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Full name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-background border border-input rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
+                placeholder="Jane Smith"
+                required
+                autoFocus
+              />
             </div>
 
-            {/* Email */}
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                Email address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  data-testid="input-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-background border border-input rounded-lg pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Email address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-background border border-input rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
+                placeholder="you@example.com"
+                required
+              />
             </div>
 
-            {/* Password */}
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                Password
-              </label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
-                  data-testid="input-password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-background border border-input rounded-lg pl-9 pr-10 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
+                  className="w-full bg-background border border-input rounded-lg px-3 py-2.5 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
                   placeholder="Min. 6 characters"
                   required
                 />
@@ -119,43 +107,19 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* Confirm Password */}
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                Confirm password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  data-testid="input-confirm-password"
-                  type={showPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full bg-background border rounded-lg pl-9 pr-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition ${
-                    confirmPassword && confirmPassword !== password
-                      ? "border-red-500/50 focus:ring-red-500/30"
-                      : "border-input"
-                  }`}
-                  placeholder="Repeat password"
-                  required
-                />
-              </div>
-              {confirmPassword && confirmPassword !== password && (
-                <p className="text-xs text-red-400 mt-1">Passwords do not match</p>
-              )}
-            </div>
+            {/* CAPTCHA */}
+            <CaptchaWidget onVerified={setCaptchaPassed} />
 
             <button
-              data-testid="button-submit"
               type="submit"
-              disabled={registerMutation.isPending || (!!confirmPassword && confirmPassword !== password)}
-              className="w-full bg-primary text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed mt-1"
+              disabled={registerMutation.isPending || !captchaPassed}
+              className="w-full bg-primary text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-semibold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {registerMutation.isPending ? "Creating account…" : "Create account"}
             </button>
           </form>
 
-          <p className="text-center text-xs text-muted-foreground mt-5">
+          <p className="text-center text-xs text-muted-foreground pt-1">
             Already have an account?{" "}
             <Link href="/login" className="text-primary hover:underline font-medium">
               Sign in

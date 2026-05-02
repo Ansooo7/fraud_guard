@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useLogin, useResendVerification, setAuthTokenGetter } from "@workspace/api-client-react";
-import { Shield, Eye, EyeOff, Mail } from "lucide-react";
+import { useLogin, setAuthTokenGetter } from "@workspace/api-client-react";
+import { Shield, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import CaptchaWidget from "@/components/CaptchaWidget";
 
@@ -12,7 +12,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [captchaPassed, setCaptchaPassed] = useState(false);
-  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
 
   const loginMutation = useLogin({
     mutation: {
@@ -21,25 +20,9 @@ export default function LoginPage() {
         setAuthTokenGetter(() => data.token);
         setLocation("/dashboard");
       },
-      onError: (err: any) => {
-        const errorCode = err?.data?.error;
-        if (errorCode === "email_not_verified") {
-          setUnverifiedEmail(err?.data?.email ?? email);
-          toast.error("Please verify your email before signing in.");
-        } else {
-          setUnverifiedEmail(null);
-          toast.error("Invalid email or password");
-        }
+      onError: () => {
+        toast.error("Invalid email or password");
         setCaptchaPassed(false);
-      },
-    },
-  });
-
-  const resendMutation = useResendVerification({
-    mutation: {
-      onSuccess: () => {
-        toast.success("Verification email resent.");
-        setLocation(`/check-email?email=${encodeURIComponent(unverifiedEmail ?? "")}`);
       },
     },
   });
@@ -50,7 +33,6 @@ export default function LoginPage() {
       toast.error("Please complete the human verification first.");
       return;
     }
-    setUnverifiedEmail(null);
     loginMutation.mutate({ data: { email, password } });
   }
 
@@ -72,26 +54,6 @@ export default function LoginPage() {
             <h2 className="text-base font-semibold text-foreground">Sign in</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Enter your credentials to access the dashboard</p>
           </div>
-
-          {/* Unverified email notice */}
-          {unverifiedEmail && (
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-3">
-              <Mail className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-amber-400 mb-0.5">Email not verified</p>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Verify <span className="font-medium">{unverifiedEmail}</span> to continue.
-                </p>
-                <button
-                  onClick={() => resendMutation.mutate({ data: { email: unverifiedEmail } })}
-                  disabled={resendMutation.isPending}
-                  className="text-xs text-primary hover:text-primary/80 transition font-medium disabled:opacity-50"
-                >
-                  {resendMutation.isPending ? "Sending…" : "Resend verification email →"}
-                </button>
-              </div>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -134,7 +96,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* CAPTCHA */}
             <CaptchaWidget onVerified={setCaptchaPassed} />
 
             <button

@@ -86,18 +86,21 @@ router.post("/auth/register", async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const [user] = await db.insert(usersTable).values({ name, email, passwordHash, role: "user", emailVerified: false }).returning();
+  const now = new Date();
+  const [user] = await db
+    .insert(usersTable)
+    .values({ name, email, passwordHash, role: "user", emailVerified: true, emailVerifiedAt: now })
+    .returning();
   if (!user) {
     res.status(500).json({ error: "server_error", message: "Failed to create account" });
     return;
   }
 
-  const verifyToken = await issueVerificationToken(user.id);
-  const verifyUrl = buildVerifyUrl(req, verifyToken);
-
-  await sendVerificationEmail({ toEmail: email, toName: name, verifyUrl });
-
-  res.status(201).json({ message: "Account created. Please check your email to verify your account.", email });
+  const token = signToken({ userId: user.id, email: user.email, role: user.role });
+  res.status(201).json({
+    token,
+    user: { id: user.id, email: user.email, name: user.name, role: user.role, createdAt: user.createdAt.toISOString() },
+  });
 });
 
 router.get("/auth/verify-email", async (req, res) => {
