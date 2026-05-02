@@ -2,6 +2,7 @@ import http from "http";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { initWebSocketServer } from "./lib/websocket";
+import { startTransactionSimulator } from "./lib/simulator";
 
 const rawPort = process.env["PORT"];
 
@@ -20,6 +21,7 @@ initWebSocketServer(server);
 
 server.listen(port, () => {
   logger.info({ port }, "Server listening");
+  startTransactionSimulator(3000);
 });
 
 server.on("error", (err) => {

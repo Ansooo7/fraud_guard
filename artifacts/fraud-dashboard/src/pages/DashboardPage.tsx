@@ -23,6 +23,8 @@ import {
   Cell,
 } from "recharts";
 import { TrendingUp, ShieldAlert, Ban, AlertCircle, Activity } from "lucide-react";
+import { useLiveTransactions } from "@/hooks/useLiveTransactions";
+import { LiveFeed } from "@/components/LiveFeed";
 
 function StatCard({
   label,
@@ -30,12 +32,14 @@ function StatCard({
   sub,
   color,
   icon: Icon,
+  liveIncrement,
 }: {
   label: string;
   value: string | number;
   sub?: string;
   color: string;
   icon: React.ComponentType<{ className?: string }>;
+  liveIncrement?: number;
 }) {
   return (
     <div className="bg-card border border-border rounded-xl p-4">
@@ -45,7 +49,12 @@ function StatCard({
           <Icon className="w-4 h-4" />
         </div>
       </div>
-      <div className="text-2xl font-bold text-foreground">{value}</div>
+      <div className="flex items-baseline gap-2">
+        <div className="text-2xl font-bold text-foreground">{value}</div>
+        {liveIncrement != null && liveIncrement > 0 && (
+          <span className="text-xs text-primary font-medium">+{liveIncrement} live</span>
+        )}
+      </div>
       {sub && <div className="text-xs text-muted-foreground mt-1">{sub}</div>}
     </div>
   );
@@ -91,6 +100,9 @@ export default function DashboardPage() {
   const { data: txData } = useListTransactions({ limit: 8, offset: 0 }, { query: { queryKey: getListTransactionsQueryKey({ limit: 8, offset: 0 }) } });
   const { data: alertData } = useListAlerts({ limit: 5, offset: 0, resolved: false }, { query: { queryKey: getListAlertsQueryKey({ limit: 5, offset: 0, resolved: false }) } });
 
+  // Live WebSocket feed
+  const { transactions: liveTransactions, status: liveStatus, counts: liveCounts } = useLiveTransactions();
+
   const fraudRate = summary ? Math.round((summary.fraudRate ?? 0) * 100) : 0;
 
   const trendData = Array.isArray(trend)
@@ -128,18 +140,21 @@ export default function DashboardPage() {
           sub={`${summary?.todayTransactions ?? 0} today`}
           color="bg-primary/10 text-primary"
           icon={Activity}
+          liveIncrement={liveCounts.total}
         />
         <StatCard
           label="Flagged"
           value={summary?.flaggedTransactions?.toLocaleString() ?? "—"}
           color="bg-amber-500/10 text-amber-400"
           icon={ShieldAlert}
+          liveIncrement={liveCounts.flagged}
         />
         <StatCard
           label="Blocked"
           value={summary?.blockedTransactions?.toLocaleString() ?? "—"}
           color="bg-red-500/10 text-red-400"
           icon={Ban}
+          liveIncrement={liveCounts.blocked}
         />
         <StatCard
           label="Open Alerts"
@@ -156,6 +171,13 @@ export default function DashboardPage() {
           icon={TrendingUp}
         />
       </div>
+
+      {/* Live Feed — full width */}
+      <LiveFeed
+        transactions={liveTransactions}
+        status={liveStatus}
+        counts={liveCounts}
+      />
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
