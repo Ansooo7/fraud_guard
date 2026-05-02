@@ -52,7 +52,8 @@ export default defineConfig({
       client: "zod",
       target: "generated/api",
       mode: "single",
-      clean: true,
+      indexFiles: false,
+      clean: false,
       prettier: true,
       override: {
         zod: {
