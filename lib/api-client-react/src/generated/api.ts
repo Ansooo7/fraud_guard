@@ -21,12 +21,14 @@ import type {
   AnalyticsSummary,
   BatchFraudCheckBody,
   BatchFraudCheckResult,
+  CreateRuleBody,
   CreateTransactionBody,
   DailyTrendPoint,
   ErrorResponse,
   FraudAlert,
   FraudCheckBody,
   FraudCheckResult,
+  FraudRule,
   HealthStatus,
   ListAlertsParams,
   ListTransactionsParams,
@@ -38,6 +40,7 @@ import type {
   RiskUserSummary,
   TransactionListResponse,
   TransactionWithAnalysis,
+  UpdateRuleBody,
   User,
 } from "./api.schemas";
 
@@ -530,6 +533,414 @@ export const useBatchCheckFraud = <
   TContext
 > => {
   return useMutation(getBatchCheckFraudMutationOptions(options));
+};
+
+/**
+ * @summary List all fraud rules
+ */
+export const getListRulesUrl = () => {
+  return `/api/rules`;
+};
+
+export const listRules = async (
+  options?: RequestInit,
+): Promise<FraudRule[]> => {
+  return customFetch<FraudRule[]>(getListRulesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListRulesQueryKey = () => {
+  return [`/api/rules`] as const;
+};
+
+export const getListRulesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listRules>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof listRules>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListRulesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listRules>>> = ({
+    signal,
+  }) => listRules({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listRules>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListRulesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listRules>>
+>;
+export type ListRulesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all fraud rules
+ */
+
+export function useListRules<
+  TData = Awaited<ReturnType<typeof listRules>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof listRules>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListRulesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a new fraud rule
+ */
+export const getCreateRuleUrl = () => {
+  return `/api/rules`;
+};
+
+export const createRule = async (
+  createRuleBody: CreateRuleBody,
+  options?: RequestInit,
+): Promise<FraudRule> => {
+  return customFetch<FraudRule>(getCreateRuleUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createRuleBody),
+  });
+};
+
+export const getCreateRuleMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createRule>>,
+    TError,
+    { data: BodyType<CreateRuleBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createRule>>,
+  TError,
+  { data: BodyType<CreateRuleBody> },
+  TContext
+> => {
+  const mutationKey = ["createRule"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createRule>>,
+    { data: BodyType<CreateRuleBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createRule(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateRuleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createRule>>
+>;
+export type CreateRuleMutationBody = BodyType<CreateRuleBody>;
+export type CreateRuleMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Create a new fraud rule
+ */
+export const useCreateRule = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createRule>>,
+    TError,
+    { data: BodyType<CreateRuleBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createRule>>,
+  TError,
+  { data: BodyType<CreateRuleBody> },
+  TContext
+> => {
+  return useMutation(getCreateRuleMutationOptions(options));
+};
+
+/**
+ * @summary Update a fraud rule
+ */
+export const getUpdateRuleUrl = (id: number) => {
+  return `/api/rules/${id}`;
+};
+
+export const updateRule = async (
+  id: number,
+  updateRuleBody: UpdateRuleBody,
+  options?: RequestInit,
+): Promise<FraudRule> => {
+  return customFetch<FraudRule>(getUpdateRuleUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateRuleBody),
+  });
+};
+
+export const getUpdateRuleMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateRule>>,
+    TError,
+    { id: number; data: BodyType<UpdateRuleBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateRule>>,
+  TError,
+  { id: number; data: BodyType<UpdateRuleBody> },
+  TContext
+> => {
+  const mutationKey = ["updateRule"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateRule>>,
+    { id: number; data: BodyType<UpdateRuleBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateRule(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateRuleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateRule>>
+>;
+export type UpdateRuleMutationBody = BodyType<UpdateRuleBody>;
+export type UpdateRuleMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update a fraud rule
+ */
+export const useUpdateRule = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateRule>>,
+    TError,
+    { id: number; data: BodyType<UpdateRuleBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateRule>>,
+  TError,
+  { id: number; data: BodyType<UpdateRuleBody> },
+  TContext
+> => {
+  return useMutation(getUpdateRuleMutationOptions(options));
+};
+
+/**
+ * @summary Delete a fraud rule
+ */
+export const getDeleteRuleUrl = (id: number) => {
+  return `/api/rules/${id}`;
+};
+
+export const deleteRule = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteRuleUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteRuleMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteRule>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteRule>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteRule"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteRule>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteRule(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteRuleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteRule>>
+>;
+
+export type DeleteRuleMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Delete a fraud rule
+ */
+export const useDeleteRule = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteRule>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteRule>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteRuleMutationOptions(options));
+};
+
+/**
+ * @summary Toggle a rule enabled/disabled
+ */
+export const getToggleRuleUrl = (id: number) => {
+  return `/api/rules/${id}/toggle`;
+};
+
+export const toggleRule = async (
+  id: number,
+  options?: RequestInit,
+): Promise<FraudRule> => {
+  return customFetch<FraudRule>(getToggleRuleUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getToggleRuleMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleRule>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof toggleRule>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["toggleRule"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof toggleRule>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return toggleRule(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ToggleRuleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof toggleRule>>
+>;
+
+export type ToggleRuleMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Toggle a rule enabled/disabled
+ */
+export const useToggleRule = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleRule>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof toggleRule>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getToggleRuleMutationOptions(options));
 };
 
 /**

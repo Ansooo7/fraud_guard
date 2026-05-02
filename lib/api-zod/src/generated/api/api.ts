@@ -120,6 +120,220 @@ export const BatchCheckFraudResponse = zod.object({
 });
 
 /**
+ * @summary List all fraud rules
+ */
+export const ListRulesResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullish(),
+  conditions: zod.array(
+    zod.object({
+      field: zod.enum([
+        "amount",
+        "merchantCategory",
+        "location",
+        "fraudScore",
+        "riskLevel",
+      ]),
+      operator: zod.enum([
+        "gt",
+        "lt",
+        "gte",
+        "lte",
+        "equals",
+        "not_equals",
+        "contains",
+        "in",
+      ]),
+      value: zod.union([zod.number(), zod.string(), zod.array(zod.string())]),
+    }),
+  ),
+  conditionLogic: zod.enum(["AND", "OR"]),
+  action: zod.enum(["approve", "flag", "block"]),
+  priority: zod.number(),
+  enabled: zod.boolean(),
+  createdBy: zod.number().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const ListRulesResponse = zod.array(ListRulesResponseItem);
+
+/**
+ * @summary Create a new fraud rule
+ */
+
+export const createRuleBodyConditionLogicDefault = `AND`;
+export const createRuleBodyPriorityDefault = 100;
+export const createRuleBodyPriorityMax = 1000;
+
+export const createRuleBodyEnabledDefault = true;
+
+export const CreateRuleBody = zod.object({
+  name: zod.string(),
+  description: zod.string().optional(),
+  conditions: zod
+    .array(
+      zod.object({
+        field: zod.enum([
+          "amount",
+          "merchantCategory",
+          "location",
+          "fraudScore",
+          "riskLevel",
+        ]),
+        operator: zod.enum([
+          "gt",
+          "lt",
+          "gte",
+          "lte",
+          "equals",
+          "not_equals",
+          "contains",
+          "in",
+        ]),
+        value: zod.union([zod.number(), zod.string(), zod.array(zod.string())]),
+      }),
+    )
+    .min(1),
+  conditionLogic: zod
+    .enum(["AND", "OR"])
+    .default(createRuleBodyConditionLogicDefault),
+  action: zod.enum(["approve", "flag", "block"]),
+  priority: zod
+    .number()
+    .min(1)
+    .max(createRuleBodyPriorityMax)
+    .default(createRuleBodyPriorityDefault),
+  enabled: zod.boolean().default(createRuleBodyEnabledDefault),
+});
+
+/**
+ * @summary Update a fraud rule
+ */
+export const UpdateRuleParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const updateRuleBodyPriorityMax = 1000;
+
+export const UpdateRuleBody = zod.object({
+  name: zod.string().optional(),
+  description: zod.string().optional(),
+  conditions: zod
+    .array(
+      zod.object({
+        field: zod.enum([
+          "amount",
+          "merchantCategory",
+          "location",
+          "fraudScore",
+          "riskLevel",
+        ]),
+        operator: zod.enum([
+          "gt",
+          "lt",
+          "gte",
+          "lte",
+          "equals",
+          "not_equals",
+          "contains",
+          "in",
+        ]),
+        value: zod.union([zod.number(), zod.string(), zod.array(zod.string())]),
+      }),
+    )
+    .optional(),
+  conditionLogic: zod.enum(["AND", "OR"]).optional(),
+  action: zod.enum(["approve", "flag", "block"]).optional(),
+  priority: zod.number().min(1).max(updateRuleBodyPriorityMax).optional(),
+  enabled: zod.boolean().optional(),
+});
+
+export const UpdateRuleResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullish(),
+  conditions: zod.array(
+    zod.object({
+      field: zod.enum([
+        "amount",
+        "merchantCategory",
+        "location",
+        "fraudScore",
+        "riskLevel",
+      ]),
+      operator: zod.enum([
+        "gt",
+        "lt",
+        "gte",
+        "lte",
+        "equals",
+        "not_equals",
+        "contains",
+        "in",
+      ]),
+      value: zod.union([zod.number(), zod.string(), zod.array(zod.string())]),
+    }),
+  ),
+  conditionLogic: zod.enum(["AND", "OR"]),
+  action: zod.enum(["approve", "flag", "block"]),
+  priority: zod.number(),
+  enabled: zod.boolean(),
+  createdBy: zod.number().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Delete a fraud rule
+ */
+export const DeleteRuleParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Toggle a rule enabled/disabled
+ */
+export const ToggleRuleParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ToggleRuleResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullish(),
+  conditions: zod.array(
+    zod.object({
+      field: zod.enum([
+        "amount",
+        "merchantCategory",
+        "location",
+        "fraudScore",
+        "riskLevel",
+      ]),
+      operator: zod.enum([
+        "gt",
+        "lt",
+        "gte",
+        "lte",
+        "equals",
+        "not_equals",
+        "contains",
+        "in",
+      ]),
+      value: zod.union([zod.number(), zod.string(), zod.array(zod.string())]),
+    }),
+  ),
+  conditionLogic: zod.enum(["AND", "OR"]),
+  action: zod.enum(["approve", "flag", "block"]),
+  priority: zod.number(),
+  enabled: zod.boolean(),
+  createdBy: zod.number().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
  * @summary List transactions with optional filters
  */
 export const listTransactionsQueryLimitDefault = 50;

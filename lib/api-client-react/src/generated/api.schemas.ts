@@ -40,6 +40,131 @@ export interface LoginResponse {
   user: User;
 }
 
+export type FraudRuleConditionField =
+  (typeof FraudRuleConditionField)[keyof typeof FraudRuleConditionField];
+
+export const FraudRuleConditionField = {
+  amount: "amount",
+  merchantCategory: "merchantCategory",
+  location: "location",
+  fraudScore: "fraudScore",
+  riskLevel: "riskLevel",
+} as const;
+
+export type FraudRuleConditionOperator =
+  (typeof FraudRuleConditionOperator)[keyof typeof FraudRuleConditionOperator];
+
+export const FraudRuleConditionOperator = {
+  gt: "gt",
+  lt: "lt",
+  gte: "gte",
+  lte: "lte",
+  equals: "equals",
+  not_equals: "not_equals",
+  contains: "contains",
+  in: "in",
+} as const;
+
+export interface FraudRuleCondition {
+  field: FraudRuleConditionField;
+  operator: FraudRuleConditionOperator;
+  value: number | string | string[];
+}
+
+export type FraudRuleConditionLogic =
+  (typeof FraudRuleConditionLogic)[keyof typeof FraudRuleConditionLogic];
+
+export const FraudRuleConditionLogic = {
+  AND: "AND",
+  OR: "OR",
+} as const;
+
+export type FraudRuleAction =
+  (typeof FraudRuleAction)[keyof typeof FraudRuleAction];
+
+export const FraudRuleAction = {
+  approve: "approve",
+  flag: "flag",
+  block: "block",
+} as const;
+
+export interface FraudRule {
+  id: number;
+  name: string;
+  description?: string | null;
+  conditions: FraudRuleCondition[];
+  conditionLogic: FraudRuleConditionLogic;
+  action: FraudRuleAction;
+  priority: number;
+  enabled: boolean;
+  createdBy?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateRuleBodyConditionLogic =
+  (typeof CreateRuleBodyConditionLogic)[keyof typeof CreateRuleBodyConditionLogic];
+
+export const CreateRuleBodyConditionLogic = {
+  AND: "AND",
+  OR: "OR",
+} as const;
+
+export type CreateRuleBodyAction =
+  (typeof CreateRuleBodyAction)[keyof typeof CreateRuleBodyAction];
+
+export const CreateRuleBodyAction = {
+  approve: "approve",
+  flag: "flag",
+  block: "block",
+} as const;
+
+export interface CreateRuleBody {
+  name: string;
+  description?: string;
+  /** @minItems 1 */
+  conditions: FraudRuleCondition[];
+  conditionLogic?: CreateRuleBodyConditionLogic;
+  action: CreateRuleBodyAction;
+  /**
+   * @minimum 1
+   * @maximum 1000
+   */
+  priority?: number;
+  enabled?: boolean;
+}
+
+export type UpdateRuleBodyConditionLogic =
+  (typeof UpdateRuleBodyConditionLogic)[keyof typeof UpdateRuleBodyConditionLogic];
+
+export const UpdateRuleBodyConditionLogic = {
+  AND: "AND",
+  OR: "OR",
+} as const;
+
+export type UpdateRuleBodyAction =
+  (typeof UpdateRuleBodyAction)[keyof typeof UpdateRuleBodyAction];
+
+export const UpdateRuleBodyAction = {
+  approve: "approve",
+  flag: "flag",
+  block: "block",
+} as const;
+
+export interface UpdateRuleBody {
+  name?: string;
+  description?: string;
+  conditions?: FraudRuleCondition[];
+  conditionLogic?: UpdateRuleBodyConditionLogic;
+  action?: UpdateRuleBodyAction;
+  /**
+   * @minimum 1
+   * @maximum 1000
+   */
+  priority?: number;
+  enabled?: boolean;
+}
+
 export interface RegisterBody {
   name: string;
   email: string;

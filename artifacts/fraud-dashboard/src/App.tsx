@@ -14,6 +14,7 @@ import AnalyticsPage from "@/pages/AnalyticsPage";
 import UsersPage from "@/pages/UsersPage";
 import FraudCheckPage from "@/pages/FraudCheckPage";
 import BatchFraudCheckPage from "@/pages/BatchFraudCheckPage";
+import RulesPage from "@/pages/RulesPage";
 import AppLayout from "@/components/AppLayout";
 
 const queryClient = new QueryClient({
@@ -74,6 +75,9 @@ function AppRoutes() {
       </Route>
       <Route path="/fraud-batch">
         <ProtectedRoute component={BatchFraudCheckPage} />
+      </Route>
+      <Route path="/rules">
+        <ProtectedRoute component={RulesPage} />
       </Route>
       <Route path="/">
         {token ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}
