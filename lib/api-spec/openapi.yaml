@@ -126,6 +126,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/FraudCheckResult"
 
+  /fraud/batch:
+    post:
+      operationId: batchCheckFraud
+      tags: [auth]
+      summary: Run fraud checks on multiple transactions at once
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchFraudCheckBody"
+      responses:
+        "200":
+          description: Batch fraud analysis results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchFraudCheckResult"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /transactions:
     get:
       operationId: listTransactions
@@ -431,6 +458,85 @@ components:
         - amount
         - merchantName
         - location
+
+    BatchFraudCheckBody:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/FraudCheckBody"
+          minItems: 1
+          maxItems: 500
+      required:
+        - transactions
+
+    BatchFraudCheckResultItem:
+      type: object
+      properties:
+        index:
+          type: integer
+        merchantName:
+          type: string
+        merchantCategory:
+          type: string
+        amount:
+          type: number
+        location:
+          type: string
+        fraudScore:
+          type: number
+        anomalyScore:
+          type: number
+        riskLevel:
+          type: string
+          enum: [low, medium, high, critical]
+        status:
+          type: string
+          enum: [approved, flagged, blocked]
+        severity:
+          type: string
+        reason:
+          type: string
+        signals:
+          type: array
+          items:
+            type: string
+      required:
+        - index
+        - merchantName
+        - merchantCategory
+        - amount
+        - location
+        - fraudScore
+        - anomalyScore
+        - riskLevel
+        - status
+        - severity
+        - reason
+        - signals
+
+    BatchFraudCheckResult:
+      type: object
+      properties:
+        total:
+          type: integer
+        approved:
+          type: integer
+        flagged:
+          type: integer
+        blocked:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/BatchFraudCheckResultItem"
+      required:
+        - total
+        - approved
+        - flagged
+        - blocked
+        - results
 
     FraudCheckResult:
       type: object

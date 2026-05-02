@@ -77,6 +77,49 @@ export const CheckFraudResponse = zod.object({
 });
 
 /**
+ * @summary Run fraud checks on multiple transactions at once
+ */
+export const batchCheckFraudBodyTransactionsMax = 500;
+
+export const BatchCheckFraudBody = zod.object({
+  transactions: zod
+    .array(
+      zod.object({
+        amount: zod.number(),
+        merchantName: zod.string(),
+        merchantCategory: zod.string().optional(),
+        location: zod.string(),
+        deviceId: zod.string().optional(),
+      }),
+    )
+    .min(1)
+    .max(batchCheckFraudBodyTransactionsMax),
+});
+
+export const BatchCheckFraudResponse = zod.object({
+  total: zod.number(),
+  approved: zod.number(),
+  flagged: zod.number(),
+  blocked: zod.number(),
+  results: zod.array(
+    zod.object({
+      index: zod.number(),
+      merchantName: zod.string(),
+      merchantCategory: zod.string(),
+      amount: zod.number(),
+      location: zod.string(),
+      fraudScore: zod.number(),
+      anomalyScore: zod.number(),
+      riskLevel: zod.enum(["low", "medium", "high", "critical"]),
+      status: zod.enum(["approved", "flagged", "blocked"]),
+      severity: zod.string(),
+      reason: zod.string(),
+      signals: zod.array(zod.string()),
+    }),
+  ),
+});
+
+/**
  * @summary List transactions with optional filters
  */
 export const listTransactionsQueryLimitDefault = 50;

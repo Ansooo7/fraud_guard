@@ -19,6 +19,8 @@ import type {
 import type {
   AlertListResponse,
   AnalyticsSummary,
+  BatchFraudCheckBody,
+  BatchFraudCheckResult,
   CreateTransactionBody,
   DailyTrendPoint,
   ErrorResponse,
@@ -442,6 +444,92 @@ export const useCheckFraud = <
   TContext
 > => {
   return useMutation(getCheckFraudMutationOptions(options));
+};
+
+/**
+ * @summary Run fraud checks on multiple transactions at once
+ */
+export const getBatchCheckFraudUrl = () => {
+  return `/api/fraud/batch`;
+};
+
+export const batchCheckFraud = async (
+  batchFraudCheckBody: BatchFraudCheckBody,
+  options?: RequestInit,
+): Promise<BatchFraudCheckResult> => {
+  return customFetch<BatchFraudCheckResult>(getBatchCheckFraudUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(batchFraudCheckBody),
+  });
+};
+
+export const getBatchCheckFraudMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof batchCheckFraud>>,
+    TError,
+    { data: BodyType<BatchFraudCheckBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof batchCheckFraud>>,
+  TError,
+  { data: BodyType<BatchFraudCheckBody> },
+  TContext
+> => {
+  const mutationKey = ["batchCheckFraud"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof batchCheckFraud>>,
+    { data: BodyType<BatchFraudCheckBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return batchCheckFraud(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type BatchCheckFraudMutationResult = NonNullable<
+  Awaited<ReturnType<typeof batchCheckFraud>>
+>;
+export type BatchCheckFraudMutationBody = BodyType<BatchFraudCheckBody>;
+export type BatchCheckFraudMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Run fraud checks on multiple transactions at once
+ */
+export const useBatchCheckFraud = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof batchCheckFraud>>,
+    TError,
+    { data: BodyType<BatchFraudCheckBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof batchCheckFraud>>,
+  TError,
+  { data: BodyType<BatchFraudCheckBody> },
+  TContext
+> => {
+  return useMutation(getBatchCheckFraudMutationOptions(options));
 };
 
 /**

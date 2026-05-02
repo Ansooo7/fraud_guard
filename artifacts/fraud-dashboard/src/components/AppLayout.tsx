@@ -16,11 +16,13 @@ import {
   LogOut,
   Shield,
   Zap,
+  Layers,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/fraud-check", label: "Fraud Check", icon: Zap },
+  { href: "/fraud-batch", label: "Batch Check", icon: Layers },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/alerts", label: "Alerts", icon: ShieldAlert },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },

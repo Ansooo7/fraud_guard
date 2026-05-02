@@ -55,6 +55,56 @@ export interface FraudCheckBody {
   deviceId?: string;
 }
 
+export interface BatchFraudCheckBody {
+  /**
+   * @minItems 1
+   * @maxItems 500
+   */
+  transactions: FraudCheckBody[];
+}
+
+export type BatchFraudCheckResultItemRiskLevel =
+  (typeof BatchFraudCheckResultItemRiskLevel)[keyof typeof BatchFraudCheckResultItemRiskLevel];
+
+export const BatchFraudCheckResultItemRiskLevel = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  critical: "critical",
+} as const;
+
+export type BatchFraudCheckResultItemStatus =
+  (typeof BatchFraudCheckResultItemStatus)[keyof typeof BatchFraudCheckResultItemStatus];
+
+export const BatchFraudCheckResultItemStatus = {
+  approved: "approved",
+  flagged: "flagged",
+  blocked: "blocked",
+} as const;
+
+export interface BatchFraudCheckResultItem {
+  index: number;
+  merchantName: string;
+  merchantCategory: string;
+  amount: number;
+  location: string;
+  fraudScore: number;
+  anomalyScore: number;
+  riskLevel: BatchFraudCheckResultItemRiskLevel;
+  status: BatchFraudCheckResultItemStatus;
+  severity: string;
+  reason: string;
+  signals: string[];
+}
+
+export interface BatchFraudCheckResult {
+  total: number;
+  approved: number;
+  flagged: number;
+  blocked: number;
+  results: BatchFraudCheckResultItem[];
+}
+
 export type FraudCheckResultRiskLevel =
   (typeof FraudCheckResultRiskLevel)[keyof typeof FraudCheckResultRiskLevel];
 
