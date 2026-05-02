@@ -7,6 +7,8 @@ import {
   Zap,
   AlertTriangle,
   Info,
+  Globe,
+  MapPin,
 } from "lucide-react";
 
 const MERCHANT_CATEGORIES = [
@@ -25,17 +27,154 @@ const MERCHANT_CATEGORIES = [
   { value: "healthcare", label: "Healthcare" },
 ];
 
-const LOCATIONS = [
-  "New York, NY",
-  "Los Angeles, CA",
-  "Chicago, IL",
-  "Miami, FL",
-  "Houston, TX",
-  "London, UK",
-  "Tokyo, JP",
-  "Paris, FR",
-  "Toronto, CA",
-  "Sydney, AU",
+type CountryEntry = { label: string; states: string[] };
+
+const COUNTRIES: Record<string, CountryEntry> = {
+  IN: {
+    label: "India",
+    states: [
+      "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+      "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+      "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+      "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+      "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+      "Uttar Pradesh", "Uttarakhand", "West Bengal",
+      "Andaman & Nicobar Islands", "Chandigarh", "Dadra & Nagar Haveli and Daman & Diu",
+      "Delhi", "Jammu & Kashmir", "Ladakh", "Lakshadweep", "Puducherry",
+    ],
+  },
+  US: {
+    label: "United States",
+    states: [
+      "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+      "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho",
+      "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana",
+      "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+      "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada",
+      "New Hampshire", "New Jersey", "New Mexico", "New York",
+      "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon",
+      "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
+      "Tennessee", "Texas", "Utah", "Vermont", "Virginia",
+      "Washington", "West Virginia", "Wisconsin", "Wyoming",
+      "Washington D.C.",
+    ],
+  },
+  GB: {
+    label: "United Kingdom",
+    states: [
+      "London", "South East England", "South West England", "East of England",
+      "East Midlands", "West Midlands", "Yorkshire and the Humber",
+      "North East England", "North West England", "Scotland",
+      "Wales", "Northern Ireland",
+    ],
+  },
+  AU: {
+    label: "Australia",
+    states: [
+      "New South Wales", "Victoria", "Queensland", "Western Australia",
+      "South Australia", "Tasmania", "Australian Capital Territory",
+      "Northern Territory",
+    ],
+  },
+  CA: {
+    label: "Canada",
+    states: [
+      "Alberta", "British Columbia", "Manitoba", "New Brunswick",
+      "Newfoundland and Labrador", "Northwest Territories", "Nova Scotia",
+      "Nunavut", "Ontario", "Prince Edward Island", "Quebec",
+      "Saskatchewan", "Yukon",
+    ],
+  },
+  AE: {
+    label: "United Arab Emirates",
+    states: [
+      "Abu Dhabi", "Dubai", "Sharjah", "Ajman",
+      "Umm Al Quwain", "Ras Al Khaimah", "Fujairah",
+    ],
+  },
+  DE: {
+    label: "Germany",
+    states: [
+      "Baden-Württemberg", "Bavaria", "Berlin", "Brandenburg", "Bremen",
+      "Hamburg", "Hesse", "Lower Saxony", "Mecklenburg-Vorpommern",
+      "North Rhine-Westphalia", "Rhineland-Palatinate", "Saarland",
+      "Saxony", "Saxony-Anhalt", "Schleswig-Holstein", "Thuringia",
+    ],
+  },
+  FR: {
+    label: "France",
+    states: [
+      "Auvergne-Rhône-Alpes", "Bourgogne-Franche-Comté", "Brittany",
+      "Centre-Val de Loire", "Corsica", "Grand Est", "Hauts-de-France",
+      "Île-de-France", "Normandy", "Nouvelle-Aquitaine", "Occitanie",
+      "Pays de la Loire", "Provence-Alpes-Côte d'Azur",
+    ],
+  },
+  JP: {
+    label: "Japan",
+    states: [
+      "Aichi", "Akita", "Aomori", "Chiba", "Ehime", "Fukui", "Fukuoka",
+      "Fukushima", "Gifu", "Gunma", "Hiroshima", "Hokkaido", "Hyogo",
+      "Ibaraki", "Ishikawa", "Iwate", "Kagawa", "Kagoshima", "Kanagawa",
+      "Kochi", "Kumamoto", "Kyoto", "Mie", "Miyagi", "Miyazaki",
+      "Nagano", "Nagasaki", "Nara", "Niigata", "Oita", "Okayama",
+      "Okinawa", "Osaka", "Saga", "Saitama", "Shiga", "Shimane",
+      "Shizuoka", "Tochigi", "Tokushima", "Tokyo", "Tottori", "Toyama",
+      "Wakayama", "Yamagata", "Yamaguchi", "Yamanashi",
+    ],
+  },
+  SG: {
+    label: "Singapore",
+    states: [
+      "Central Region", "East Region", "North Region", "North-East Region", "West Region",
+    ],
+  },
+  CN: {
+    label: "China",
+    states: [
+      "Anhui", "Beijing", "Chongqing", "Fujian", "Gansu", "Guangdong",
+      "Guangxi", "Guizhou", "Hainan", "Hebei", "Heilongjiang", "Henan",
+      "Hubei", "Hunan", "Inner Mongolia", "Jiangsu", "Jiangxi", "Jilin",
+      "Liaoning", "Ningxia", "Qinghai", "Shaanxi", "Shandong", "Shanghai",
+      "Shanxi", "Sichuan", "Tianjin", "Tibet", "Xinjiang", "Yunnan",
+      "Zhejiang",
+    ],
+  },
+  BR: {
+    label: "Brazil",
+    states: [
+      "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará",
+      "Distrito Federal", "Espírito Santo", "Goiás", "Maranhão",
+      "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Pará",
+      "Paraíba", "Paraná", "Pernambuco", "Piauí", "Rio de Janeiro",
+      "Rio Grande do Norte", "Rio Grande do Sul", "Rondônia", "Roraima",
+      "Santa Catarina", "São Paulo", "Sergipe", "Tocantins",
+    ],
+  },
+  ZA: {
+    label: "South Africa",
+    states: [
+      "Eastern Cape", "Free State", "Gauteng", "KwaZulu-Natal", "Limpopo",
+      "Mpumalanga", "North West", "Northern Cape", "Western Cape",
+    ],
+  },
+  NL: {
+    label: "Netherlands",
+    states: [
+      "Drenthe", "Flevoland", "Friesland", "Gelderland", "Groningen",
+      "Limburg", "North Brabant", "North Holland", "Overijssel",
+      "South Holland", "Utrecht", "Zeeland",
+    ],
+  },
+  OTHER: {
+    label: "Other",
+    states: [],
+  },
+};
+
+const COUNTRY_ORDER = [
+  "IN", "US", "GB", "AU", "CA", "AE", "DE", "FR", "JP", "SG",
+  "CN", "BR", "ZA", "NL", "OTHER",
 ];
 
 type FraudResult = {
@@ -101,12 +240,23 @@ function GaugeBar({ score, label }: { score: number; label: string }) {
   );
 }
 
+type Preset = { label: string; amount: string; merchant: string; category: string; country: string; state: string };
+
+const PRESETS: Preset[] = [
+  { label: "Normal grocery", amount: "850", merchant: "Reliance Fresh", category: "retail", country: "IN", state: "Maharashtra" },
+  { label: "High-value jewellery", amount: "85000", merchant: "Tanishq", category: "jewelry", country: "IN", state: "Gujarat" },
+  { label: "Crypto exchange", amount: "3200", merchant: "Coinbase", category: "crypto", country: "US", state: "California" },
+  { label: "Casino charge", amount: "5000", merchant: "Bellagio Casino", category: "gambling", country: "US", state: "Nevada" },
+  { label: "Wire transfer", amount: "15000", merchant: "Western Union", category: "wire_transfer", country: "GB", state: "London" },
+];
+
 export default function FraudCheckPage() {
   const [amount, setAmount] = useState("");
   const [merchantName, setMerchantName] = useState("");
   const [merchantCategory, setMerchantCategory] = useState("");
-  const [location, setLocation] = useState("");
-  const [customLocation, setCustomLocation] = useState("");
+  const [country, setCountry] = useState("");
+  const [state, setState] = useState("");
+  const [customState, setCustomState] = useState("");
   const [result, setResult] = useState<FraudResult | null>(null);
 
   const checkMutation = useCheckFraud({
@@ -117,9 +267,28 @@ export default function FraudCheckPage() {
     },
   });
 
+  const selectedCountry = country ? COUNTRIES[country] : null;
+  const hasStates = selectedCountry && selectedCountry.states.length > 0;
+  const isOther = country === "OTHER";
+
+  function buildLocation(): string {
+    if (!country) return "";
+    const countryLabel = COUNTRIES[country]?.label ?? country;
+    if (isOther) return customState ? `${customState}` : countryLabel;
+    if (!state) return countryLabel;
+    return `${state}, ${countryLabel}`;
+  }
+
+  function handleCountryChange(val: string) {
+    setCountry(val);
+    setState("");
+    setCustomState("");
+    setResult(null);
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const loc = location === "__custom__" ? customLocation : location;
+    const loc = buildLocation();
     checkMutation.mutate({
       data: {
         amount: parseFloat(amount),
@@ -135,11 +304,23 @@ export default function FraudCheckPage() {
     setAmount("");
     setMerchantName("");
     setMerchantCategory("");
-    setLocation("");
-    setCustomLocation("");
+    setCountry("");
+    setState("");
+    setCustomState("");
     checkMutation.reset();
   }
 
+  function applyPreset(p: Preset) {
+    setAmount(p.amount);
+    setMerchantName(p.merchant);
+    setMerchantCategory(p.category);
+    setCountry(p.country);
+    setState(p.state);
+    setCustomState("");
+    setResult(null);
+  }
+
+  const locationFilled = isOther ? !!customState : (!!country && (!hasStates || !!state));
   const statusCfg = result ? STATUS_CONFIG[result.status] : null;
 
   return (
@@ -163,7 +344,7 @@ export default function FraudCheckPage() {
             {/* Amount */}
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                Amount (USD) <span className="text-red-400">*</span>
+                Amount <span className="text-red-400">*</span>
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">$</span>
@@ -192,7 +373,7 @@ export default function FraudCheckPage() {
                 value={merchantName}
                 onChange={(e) => setMerchantName(e.target.value)}
                 className="w-full bg-background border border-input rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
-                placeholder="e.g. Amazon, Shell Gas"
+                placeholder="e.g. Flipkart, Amazon, Shell"
                 required
               />
             </div>
@@ -220,34 +401,72 @@ export default function FraudCheckPage() {
               )}
             </div>
 
-            {/* Location */}
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+            {/* Location — Country */}
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-muted-foreground">
                 Location <span className="text-red-400">*</span>
               </label>
-              <select
-                data-testid="select-location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full bg-background border border-input rounded-lg px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition appearance-none cursor-pointer"
-                required={location !== "__custom__"}
-              >
-                <option value="">Select location...</option>
-                {LOCATIONS.map((loc) => (
-                  <option key={loc} value={loc}>{loc}</option>
-                ))}
-                <option value="__custom__">Other (type manually)</option>
-              </select>
-              {location === "__custom__" && (
-                <input
-                  data-testid="input-custom-location"
-                  type="text"
-                  value={customLocation}
-                  onChange={(e) => setCustomLocation(e.target.value)}
-                  className="mt-2 w-full bg-background border border-input rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
-                  placeholder="City, Country"
+
+              {/* Step 1: Country */}
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                <select
+                  data-testid="select-country"
+                  value={country}
+                  onChange={(e) => handleCountryChange(e.target.value)}
+                  className="w-full bg-background border border-input rounded-lg pl-8 pr-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition appearance-none cursor-pointer"
                   required
-                />
+                >
+                  <option value="">Select country...</option>
+                  {COUNTRY_ORDER.map((code) => (
+                    <option key={code} value={code}>
+                      {COUNTRIES[code]!.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Step 2: State / Region */}
+              {country && !isOther && hasStates && (
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                  <select
+                    data-testid="select-state"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    className="w-full bg-background border border-input rounded-lg pl-8 pr-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition appearance-none cursor-pointer"
+                    required
+                  >
+                    <option value="">Select state / region...</option>
+                    {selectedCountry!.states.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Other: manual input */}
+              {isOther && (
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                  <input
+                    data-testid="input-custom-location"
+                    type="text"
+                    value={customState}
+                    onChange={(e) => setCustomState(e.target.value)}
+                    className="w-full bg-background border border-input rounded-lg pl-8 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
+                    placeholder="City, Country"
+                    required
+                  />
+                </div>
+              )}
+
+              {/* Preview */}
+              {locationFilled && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-primary" />
+                  <span className="text-primary font-medium">{buildLocation()}</span>
+                </p>
               )}
             </div>
 
@@ -255,7 +474,7 @@ export default function FraudCheckPage() {
               <button
                 data-testid="button-check-fraud"
                 type="submit"
-                disabled={checkMutation.isPending}
+                disabled={checkMutation.isPending || !locationFilled}
                 className="flex-1 bg-primary text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {checkMutation.isPending ? "Analyzing..." : "Analyze Transaction"}
@@ -304,17 +523,26 @@ export default function FraudCheckPage() {
                   <div>
                     <div className={`text-xl font-bold ${statusCfg.text}`}>{statusCfg.label}</div>
                     <div className="text-xs text-muted-foreground capitalize">
-                      Risk level: <span className={`font-semibold ${RISK_COLORS[result.riskLevel]}`}>{result.riskLevel}</span>
+                      Risk level:{" "}
+                      <span className={`font-semibold ${RISK_COLORS[result.riskLevel]}`}>{result.riskLevel}</span>
                     </div>
                   </div>
                   <div className="ml-auto text-right">
                     <div className="text-xs text-muted-foreground">Amount</div>
                     <div className="text-sm font-mono font-bold text-foreground">
-                      ${parseFloat(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      {parseFloat(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Location summary */}
+              {locationFilled && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  <span>{buildLocation()}</span>
+                </div>
+              )}
 
               {/* Scores */}
               <div className="space-y-3">
@@ -356,23 +584,11 @@ export default function FraudCheckPage() {
       <div className="bg-card border border-border rounded-xl p-4">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Quick test scenarios</p>
         <div className="flex flex-wrap gap-2">
-          {[
-            { label: "Normal purchase", amount: "45.99", merchant: "Starbucks", category: "food", location: "New York, NY" },
-            { label: "High-value retail", amount: "8500", merchant: "Apple Store", category: "electronics", location: "Los Angeles, CA" },
-            { label: "Crypto exchange", amount: "3200", merchant: "Coinbase", category: "crypto", location: "Miami, FL" },
-            { label: "Casino charge", amount: "5000", merchant: "Bellagio Casino", category: "gambling", location: "Las Vegas, NV" },
-            { label: "Wire transfer", amount: "15000", merchant: "Western Union", category: "wire_transfer", location: "London, UK" },
-          ].map((preset) => (
+          {PRESETS.map((preset) => (
             <button
               key={preset.label}
               data-testid={`preset-${preset.label.toLowerCase().replace(/\s+/g, "-")}`}
-              onClick={() => {
-                setAmount(preset.amount);
-                setMerchantName(preset.merchant);
-                setMerchantCategory(preset.category);
-                setLocation(preset.location);
-                setResult(null);
-              }}
+              onClick={() => applyPreset(preset)}
               className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition"
             >
               {preset.label}
