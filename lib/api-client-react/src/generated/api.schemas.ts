@@ -533,6 +533,22 @@ export type ResendVerification200 = {
   message: string;
 };
 
+export type RequestOtpBody = {
+  email: string;
+  name?: string;
+};
+
+export type RequestOtp200 = {
+  message: string;
+  /** Only present in dev/demo mode — the OTP shown on screen */
+  devCode?: string;
+};
+
+export type VerifyOtpBody = {
+  email: string;
+  code: string;
+};
+
 export type GetUnreadCount200 = {
   count: number;
 };

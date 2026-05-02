@@ -85,6 +85,41 @@ export const ResendVerificationResponse = zod.object({
 });
 
 /**
+ * @summary Request a magic OTP code for any email
+ */
+export const RequestOtpBody = zod.object({
+  email: zod.string(),
+  name: zod.string().optional(),
+});
+
+export const RequestOtpResponse = zod.object({
+  message: zod.string(),
+  devCode: zod
+    .string()
+    .optional()
+    .describe("Only present in dev\/demo mode — the OTP shown on screen"),
+});
+
+/**
+ * @summary Verify magic OTP code and log in
+ */
+export const VerifyOtpBody = zod.object({
+  email: zod.string(),
+  code: zod.string(),
+});
+
+export const VerifyOtpResponse = zod.object({
+  token: zod.string(),
+  user: zod.object({
+    id: zod.number(),
+    email: zod.string(),
+    name: zod.string(),
+    role: zod.enum(["admin", "analyst", "user"]),
+    createdAt: zod.coerce.date(),
+  }),
+});
+
+/**
  * @summary Check a transaction for fraud without persisting
  */
 export const CheckFraudBody = zod.object({

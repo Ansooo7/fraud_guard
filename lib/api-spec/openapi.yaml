@@ -169,6 +169,69 @@ paths:
                     type: string
                 required: [message]
 
+  /auth/otp/request:
+    post:
+      operationId: requestOtp
+      tags: [auth]
+      summary: Request a magic OTP code for any email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                name:
+                  type: string
+              required: [email]
+      responses:
+        "200":
+          description: OTP sent (devCode included in demo mode)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  devCode:
+                    type: string
+                    description: Only present in dev/demo mode — the OTP shown on screen
+                required: [message]
+
+  /auth/otp/verify:
+    post:
+      operationId: verifyOtp
+      tags: [auth]
+      summary: Verify magic OTP code and log in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                code:
+                  type: string
+              required: [email, code]
+      responses:
+        "200":
+          description: Verified — returns JWT
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Invalid or expired code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /fraud/check:
     post:
       operationId: checkFraud
