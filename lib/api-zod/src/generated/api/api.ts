@@ -120,6 +120,156 @@ export const BatchCheckFraudResponse = zod.object({
 });
 
 /**
+ * @summary List all fraud cases
+ */
+export const ListCasesQueryParams = zod.object({
+  status: zod
+    .enum(["open", "under_review", "resolved", "dismissed"])
+    .optional(),
+  priority: zod.enum(["low", "medium", "high", "critical"]).optional(),
+  assignedTo: zod.coerce.number().optional(),
+});
+
+export const ListCasesResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  status: zod.enum(["open", "under_review", "resolved", "dismissed"]),
+  priority: zod.enum(["low", "medium", "high", "critical"]),
+  alertId: zod.number().nullish(),
+  transactionRef: zod.string().nullish(),
+  merchantName: zod.string().nullish(),
+  amount: zod.number().nullish(),
+  location: zod.string().nullish(),
+  assignedTo: zod.number().nullish(),
+  assigneeName: zod.string().nullish(),
+  createdBy: zod.number().nullish(),
+  noteCount: zod.number().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+  resolvedAt: zod.string().nullish(),
+});
+export const ListCasesResponse = zod.array(ListCasesResponseItem);
+
+/**
+ * @summary Create a new case
+ */
+export const createCaseBodyPriorityDefault = `medium`;
+
+export const CreateCaseBody = zod.object({
+  title: zod.string(),
+  description: zod.string().optional(),
+  priority: zod
+    .enum(["low", "medium", "high", "critical"])
+    .default(createCaseBodyPriorityDefault),
+  alertId: zod.number().optional(),
+  transactionRef: zod.string().optional(),
+  merchantName: zod.string().optional(),
+  amount: zod.number().optional(),
+  location: zod.string().optional(),
+  assignedTo: zod.number().optional(),
+});
+
+/**
+ * @summary Get a single case
+ */
+export const GetCaseParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetCaseResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  status: zod.enum(["open", "under_review", "resolved", "dismissed"]),
+  priority: zod.enum(["low", "medium", "high", "critical"]),
+  alertId: zod.number().nullish(),
+  transactionRef: zod.string().nullish(),
+  merchantName: zod.string().nullish(),
+  amount: zod.number().nullish(),
+  location: zod.string().nullish(),
+  assignedTo: zod.number().nullish(),
+  assigneeName: zod.string().nullish(),
+  createdBy: zod.number().nullish(),
+  noteCount: zod.number().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+  resolvedAt: zod.string().nullish(),
+});
+
+/**
+ * @summary Update a case
+ */
+export const UpdateCaseParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateCaseBody = zod.object({
+  title: zod.string().optional(),
+  description: zod.string().optional(),
+  status: zod
+    .enum(["open", "under_review", "resolved", "dismissed"])
+    .optional(),
+  priority: zod.enum(["low", "medium", "high", "critical"]).optional(),
+  assignedTo: zod.number().nullish(),
+});
+
+export const UpdateCaseResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  status: zod.enum(["open", "under_review", "resolved", "dismissed"]),
+  priority: zod.enum(["low", "medium", "high", "critical"]),
+  alertId: zod.number().nullish(),
+  transactionRef: zod.string().nullish(),
+  merchantName: zod.string().nullish(),
+  amount: zod.number().nullish(),
+  location: zod.string().nullish(),
+  assignedTo: zod.number().nullish(),
+  assigneeName: zod.string().nullish(),
+  createdBy: zod.number().nullish(),
+  noteCount: zod.number().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+  resolvedAt: zod.string().nullish(),
+});
+
+/**
+ * @summary Delete a case
+ */
+export const DeleteCaseParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List notes for a case
+ */
+export const ListCaseNotesParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ListCaseNotesResponseItem = zod.object({
+  id: zod.number(),
+  caseId: zod.number(),
+  content: zod.string(),
+  createdBy: zod.number().nullish(),
+  authorName: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const ListCaseNotesResponse = zod.array(ListCaseNotesResponseItem);
+
+/**
+ * @summary Add a note to a case
+ */
+export const AddCaseNoteParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AddCaseNoteBody = zod.object({
+  content: zod.string(),
+});
+
+/**
  * @summary List all fraud rules
  */
 export const ListRulesResponseItem = zod.object({

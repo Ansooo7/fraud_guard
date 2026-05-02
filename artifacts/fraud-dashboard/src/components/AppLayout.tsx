@@ -18,12 +18,14 @@ import {
   Zap,
   Layers,
   SlidersHorizontal,
+  FolderOpen,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/fraud-check", label: "Fraud Check", icon: Zap },
   { href: "/fraud-batch", label: "Batch Check", icon: Layers },
+  { href: "/cases", label: "Cases", icon: FolderOpen },
   { href: "/rules", label: "Rule Engine", icon: SlidersHorizontal },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
   { href: "/alerts", label: "Alerts", icon: ShieldAlert },

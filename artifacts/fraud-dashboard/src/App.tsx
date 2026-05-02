@@ -15,6 +15,7 @@ import UsersPage from "@/pages/UsersPage";
 import FraudCheckPage from "@/pages/FraudCheckPage";
 import BatchFraudCheckPage from "@/pages/BatchFraudCheckPage";
 import RulesPage from "@/pages/RulesPage";
+import CasesPage from "@/pages/CasesPage";
 import AppLayout from "@/components/AppLayout";
 
 const queryClient = new QueryClient({
@@ -78,6 +79,9 @@ function AppRoutes() {
       </Route>
       <Route path="/rules">
         <ProtectedRoute component={RulesPage} />
+      </Route>
+      <Route path="/cases">
+        <ProtectedRoute component={CasesPage} />
       </Route>
       <Route path="/">
         {token ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}

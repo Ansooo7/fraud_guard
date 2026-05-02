@@ -40,6 +40,109 @@ export interface LoginResponse {
   user: User;
 }
 
+export type FraudCaseStatus =
+  (typeof FraudCaseStatus)[keyof typeof FraudCaseStatus];
+
+export const FraudCaseStatus = {
+  open: "open",
+  under_review: "under_review",
+  resolved: "resolved",
+  dismissed: "dismissed",
+} as const;
+
+export type FraudCasePriority =
+  (typeof FraudCasePriority)[keyof typeof FraudCasePriority];
+
+export const FraudCasePriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  critical: "critical",
+} as const;
+
+export interface FraudCase {
+  id: number;
+  title: string;
+  description?: string | null;
+  status: FraudCaseStatus;
+  priority: FraudCasePriority;
+  alertId?: number | null;
+  transactionRef?: string | null;
+  merchantName?: string | null;
+  amount?: number | null;
+  location?: string | null;
+  assignedTo?: number | null;
+  assigneeName?: string | null;
+  createdBy?: number | null;
+  noteCount?: number | null;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string | null;
+}
+
+export interface CaseNote {
+  id: number;
+  caseId: number;
+  content: string;
+  createdBy?: number | null;
+  authorName?: string | null;
+  createdAt: string;
+}
+
+export type CreateCaseBodyPriority =
+  (typeof CreateCaseBodyPriority)[keyof typeof CreateCaseBodyPriority];
+
+export const CreateCaseBodyPriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  critical: "critical",
+} as const;
+
+export interface CreateCaseBody {
+  title: string;
+  description?: string;
+  priority?: CreateCaseBodyPriority;
+  alertId?: number;
+  transactionRef?: string;
+  merchantName?: string;
+  amount?: number;
+  location?: string;
+  assignedTo?: number;
+}
+
+export type UpdateCaseBodyStatus =
+  (typeof UpdateCaseBodyStatus)[keyof typeof UpdateCaseBodyStatus];
+
+export const UpdateCaseBodyStatus = {
+  open: "open",
+  under_review: "under_review",
+  resolved: "resolved",
+  dismissed: "dismissed",
+} as const;
+
+export type UpdateCaseBodyPriority =
+  (typeof UpdateCaseBodyPriority)[keyof typeof UpdateCaseBodyPriority];
+
+export const UpdateCaseBodyPriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  critical: "critical",
+} as const;
+
+export interface UpdateCaseBody {
+  title?: string;
+  description?: string;
+  status?: UpdateCaseBodyStatus;
+  priority?: UpdateCaseBodyPriority;
+  assignedTo?: number | null;
+}
+
+export interface AddNoteBody {
+  content: string;
+}
+
 export type FraudRuleConditionField =
   (typeof FraudRuleConditionField)[keyof typeof FraudRuleConditionField];
 
@@ -401,6 +504,32 @@ export interface RiskUserSummary {
   transactionCount: number;
   flaggedCount: number;
 }
+
+export type ListCasesParams = {
+  status?: ListCasesStatus;
+  priority?: ListCasesPriority;
+  assignedTo?: number;
+};
+
+export type ListCasesStatus =
+  (typeof ListCasesStatus)[keyof typeof ListCasesStatus];
+
+export const ListCasesStatus = {
+  open: "open",
+  under_review: "under_review",
+  resolved: "resolved",
+  dismissed: "dismissed",
+} as const;
+
+export type ListCasesPriority =
+  (typeof ListCasesPriority)[keyof typeof ListCasesPriority];
+
+export const ListCasesPriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  critical: "critical",
+} as const;
 
 export type ListTransactionsParams = {
   limit?: number;

@@ -22,6 +22,8 @@ tags:
     description: User management
   - name: rules
     description: Fraud rule management
+  - name: cases
+    description: Case management
 paths:
   /healthz:
     get:
@@ -154,6 +156,172 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /cases:
+    get:
+      operationId: listCases
+      tags: [cases]
+      summary: List all fraud cases
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, under_review, resolved, dismissed]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: assignedTo
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FraudCase"
+    post:
+      operationId: createCase
+      tags: [cases]
+      summary: Create a new case
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCaseBody"
+      responses:
+        "201":
+          description: Case created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FraudCase"
+
+  /cases/{id}:
+    get:
+      operationId: getCase
+      tags: [cases]
+      summary: Get a single case
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Case found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FraudCase"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateCase
+      tags: [cases]
+      summary: Update a case
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCaseBody"
+      responses:
+        "200":
+          description: Case updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FraudCase"
+    delete:
+      operationId: deleteCase
+      tags: [cases]
+      summary: Delete a case
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Case deleted
+
+  /cases/{id}/notes:
+    get:
+      operationId: listCaseNotes
+      tags: [cases]
+      summary: List notes for a case
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CaseNote"
+    post:
+      operationId: addCaseNote
+      tags: [cases]
+      summary: Add a note to a case
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddNoteBody"
+      responses:
+        "201":
+          description: Note added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseNote"
 
   /rules:
     get:
@@ -543,6 +711,138 @@ components:
       required:
         - token
         - user
+
+    FraudCase:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [open, under_review, resolved, dismissed]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        alertId:
+          type: integer
+          nullable: true
+        transactionRef:
+          type: string
+          nullable: true
+        merchantName:
+          type: string
+          nullable: true
+        amount:
+          type: number
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        assignedTo:
+          type: integer
+          nullable: true
+        assigneeName:
+          type: string
+          nullable: true
+        createdBy:
+          type: integer
+          nullable: true
+        noteCount:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        resolvedAt:
+          type: string
+          nullable: true
+      required:
+        - id
+        - title
+        - status
+        - priority
+        - createdAt
+        - updatedAt
+
+    CaseNote:
+      type: object
+      properties:
+        id:
+          type: integer
+        caseId:
+          type: integer
+        content:
+          type: string
+        createdBy:
+          type: integer
+          nullable: true
+        authorName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - caseId
+        - content
+        - createdAt
+
+    CreateCaseBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          default: medium
+        alertId:
+          type: integer
+        transactionRef:
+          type: string
+        merchantName:
+          type: string
+        amount:
+          type: number
+        location:
+          type: string
+        assignedTo:
+          type: integer
+      required:
+        - title
+
+    UpdateCaseBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, under_review, resolved, dismissed]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        assignedTo:
+          type: integer
+          nullable: true
+
+    AddNoteBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
 
     FraudRuleCondition:
       type: object
