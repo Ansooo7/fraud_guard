@@ -23,11 +23,14 @@ import type {
   DailyTrendPoint,
   ErrorResponse,
   FraudAlert,
+  FraudCheckBody,
+  FraudCheckResult,
   HealthStatus,
   ListAlertsParams,
   ListTransactionsParams,
   LoginBody,
   LoginResponse,
+  RegisterBody,
   ResolveAlertBody,
   RiskDistributionPoint,
   RiskUserSummary,
@@ -268,6 +271,178 @@ export function useGetMe<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Register a new user account
+ */
+export const getRegisterUrl = () => {
+  return `/api/auth/register`;
+};
+
+export const register = async (
+  registerBody: RegisterBody,
+  options?: RequestInit,
+): Promise<LoginResponse> => {
+  return customFetch<LoginResponse>(getRegisterUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(registerBody),
+  });
+};
+
+export const getRegisterMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof register>>,
+    TError,
+    { data: BodyType<RegisterBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof register>>,
+  TError,
+  { data: BodyType<RegisterBody> },
+  TContext
+> => {
+  const mutationKey = ["register"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof register>>,
+    { data: BodyType<RegisterBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return register(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RegisterMutationResult = NonNullable<
+  Awaited<ReturnType<typeof register>>
+>;
+export type RegisterMutationBody = BodyType<RegisterBody>;
+export type RegisterMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Register a new user account
+ */
+export const useRegister = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof register>>,
+    TError,
+    { data: BodyType<RegisterBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof register>>,
+  TError,
+  { data: BodyType<RegisterBody> },
+  TContext
+> => {
+  return useMutation(getRegisterMutationOptions(options));
+};
+
+/**
+ * @summary Check a transaction for fraud without persisting
+ */
+export const getCheckFraudUrl = () => {
+  return `/api/fraud/check`;
+};
+
+export const checkFraud = async (
+  fraudCheckBody: FraudCheckBody,
+  options?: RequestInit,
+): Promise<FraudCheckResult> => {
+  return customFetch<FraudCheckResult>(getCheckFraudUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(fraudCheckBody),
+  });
+};
+
+export const getCheckFraudMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof checkFraud>>,
+    TError,
+    { data: BodyType<FraudCheckBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof checkFraud>>,
+  TError,
+  { data: BodyType<FraudCheckBody> },
+  TContext
+> => {
+  const mutationKey = ["checkFraud"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof checkFraud>>,
+    { data: BodyType<FraudCheckBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return checkFraud(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CheckFraudMutationResult = NonNullable<
+  Awaited<ReturnType<typeof checkFraud>>
+>;
+export type CheckFraudMutationBody = BodyType<FraudCheckBody>;
+export type CheckFraudMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Check a transaction for fraud without persisting
+ */
+export const useCheckFraud = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof checkFraud>>,
+    TError,
+    { data: BodyType<FraudCheckBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof checkFraud>>,
+  TError,
+  { data: BodyType<FraudCheckBody> },
+  TContext
+> => {
+  return useMutation(getCheckFraudMutationOptions(options));
+};
 
 /**
  * @summary List transactions with optional filters

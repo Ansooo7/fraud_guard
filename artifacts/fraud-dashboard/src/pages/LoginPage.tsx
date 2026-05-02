@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useLogin, setAuthTokenGetter } from "@workspace/api-client-react";
 import { Shield, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
@@ -99,6 +99,13 @@ export default function LoginPage() {
             <p className="text-xs text-muted-foreground">Admin: admin@fraudguard.io / admin123</p>
             <p className="text-xs text-muted-foreground">Analyst: analyst@fraudguard.io / analyst123</p>
           </div>
+
+          <p className="text-center text-xs text-muted-foreground mt-5">
+            New to FraudGuard?{" "}
+            <Link href="/signup" className="text-primary hover:underline font-medium">
+              Create an account
+            </Link>
+          </p>
         </div>
       </div>
     </div>

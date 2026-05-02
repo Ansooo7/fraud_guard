@@ -40,6 +40,60 @@ export interface LoginResponse {
   user: User;
 }
 
+export interface RegisterBody {
+  name: string;
+  email: string;
+  /** @minLength 6 */
+  password: string;
+}
+
+export interface FraudCheckBody {
+  amount: number;
+  merchantName: string;
+  merchantCategory?: string;
+  location: string;
+  deviceId?: string;
+}
+
+export type FraudCheckResultRiskLevel =
+  (typeof FraudCheckResultRiskLevel)[keyof typeof FraudCheckResultRiskLevel];
+
+export const FraudCheckResultRiskLevel = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  critical: "critical",
+} as const;
+
+export type FraudCheckResultStatus =
+  (typeof FraudCheckResultStatus)[keyof typeof FraudCheckResultStatus];
+
+export const FraudCheckResultStatus = {
+  approved: "approved",
+  flagged: "flagged",
+  blocked: "blocked",
+} as const;
+
+export type FraudCheckResultSeverity =
+  (typeof FraudCheckResultSeverity)[keyof typeof FraudCheckResultSeverity];
+
+export const FraudCheckResultSeverity = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  critical: "critical",
+} as const;
+
+export interface FraudCheckResult {
+  fraudScore: number;
+  anomalyScore: number;
+  riskLevel: FraudCheckResultRiskLevel;
+  status: FraudCheckResultStatus;
+  severity: FraudCheckResultSeverity;
+  reason: string;
+  signals: string[];
+}
+
 export interface CreateTransactionBody {
   userId: number;
   amount: number;

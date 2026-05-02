@@ -45,6 +45,38 @@ export const GetMeResponse = zod.object({
 });
 
 /**
+ * @summary Register a new user account
+ */
+export const registerBodyPasswordMin = 6;
+
+export const RegisterBody = zod.object({
+  name: zod.string(),
+  email: zod.string().email(),
+  password: zod.string().min(registerBodyPasswordMin),
+});
+
+/**
+ * @summary Check a transaction for fraud without persisting
+ */
+export const CheckFraudBody = zod.object({
+  amount: zod.number(),
+  merchantName: zod.string(),
+  merchantCategory: zod.string().optional(),
+  location: zod.string(),
+  deviceId: zod.string().optional(),
+});
+
+export const CheckFraudResponse = zod.object({
+  fraudScore: zod.number(),
+  anomalyScore: zod.number(),
+  riskLevel: zod.enum(["low", "medium", "high", "critical"]),
+  status: zod.enum(["approved", "flagged", "blocked"]),
+  severity: zod.enum(["low", "medium", "high", "critical"]),
+  reason: zod.string(),
+  signals: zod.array(zod.string()),
+});
+
+/**
  * @summary List transactions with optional filters
  */
 export const listTransactionsQueryLimitDefault = 50;

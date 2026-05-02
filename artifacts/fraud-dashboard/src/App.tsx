@@ -6,11 +6,13 @@ import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
+import SignupPage from "@/pages/SignupPage";
 import DashboardPage from "@/pages/DashboardPage";
 import TransactionsPage from "@/pages/TransactionsPage";
 import AlertsPage from "@/pages/AlertsPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
 import UsersPage from "@/pages/UsersPage";
+import FraudCheckPage from "@/pages/FraudCheckPage";
 import AppLayout from "@/components/AppLayout";
 
 const queryClient = new QueryClient({
@@ -48,6 +50,9 @@ function AppRoutes() {
       <Route path="/login">
         {token ? <Redirect to="/dashboard" /> : <LoginPage />}
       </Route>
+      <Route path="/signup">
+        {token ? <Redirect to="/dashboard" /> : <SignupPage />}
+      </Route>
       <Route path="/dashboard">
         <ProtectedRoute component={DashboardPage} />
       </Route>
@@ -62,6 +67,9 @@ function AppRoutes() {
       </Route>
       <Route path="/users">
         <ProtectedRoute component={UsersPage} />
+      </Route>
+      <Route path="/fraud-check">
+        <ProtectedRoute component={FraudCheckPage} />
       </Route>
       <Route path="/">
         {token ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}

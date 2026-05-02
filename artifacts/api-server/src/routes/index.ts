@@ -5,6 +5,7 @@ import transactionsRouter from "./transactions";
 import alertsRouter from "./alerts";
 import analyticsRouter from "./analytics";
 import usersRouter from "./users";
+import fraudCheckRouter from "./fraud-check";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(transactionsRouter);
 router.use(alertsRouter);
 router.use(analyticsRouter);
 router.use(usersRouter);
+router.use(fraudCheckRouter);
 
 export default router;
