@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useLogin, useResendVerification, useRequestOtp, useVerifyOtp, setAuthTokenGetter } from "@workspace/api-client-react";
 import { Shield, Eye, EyeOff, Mail, KeyRound, ArrowRight, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import CaptchaWidget from "@/components/CaptchaWidget";
 
 type Tab = "password" | "magic";
 type MagicStep = "email" | "code";
@@ -10,6 +11,10 @@ type MagicStep = "email" | "code";
 export default function LoginPage() {
   const [, setLocation] = useLocation();
   const [tab, setTab] = useState<Tab>("magic");
+
+  // Per-tab CAPTCHA state — reset when switching tabs
+  const [magicCaptchaPassed, setMagicCaptchaPassed] = useState(false);
+  const [passwordCaptchaPassed, setPasswordCaptchaPassed] = useState(false);
 
   // Password login state
   const [email, setEmail] = useState("admin@fraudguard.io");
@@ -40,6 +45,8 @@ export default function LoginPage() {
           setUnverifiedEmail(null);
           toast.error("Invalid email or password");
         }
+        // Reset captcha on failed login so bot can't retry without re-verifying
+        setPasswordCaptchaPassed(false);
       },
     },
   });
@@ -55,20 +62,19 @@ export default function LoginPage() {
 
   function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!passwordCaptchaPassed) { toast.error("Please complete the human verification first."); return; }
     setUnverifiedEmail(null);
     loginMutation.mutate({ data: { email, password } });
   }
 
-  // ── Magic code ─────────────────────────────────────────────────────────────
+  // ── Magic code ────────────────────────────────────────────────────────────
   const requestOtpMutation = useRequestOtp({
     mutation: {
       onSuccess: (data) => {
         const d = data as { message: string; devCode?: string };
         setMagicStep("code");
-        if (d.devCode) {
-          setDevCode(d.devCode);
-        }
-        toast.success("Verification code ready!");
+        if (d.devCode) setDevCode(d.devCode);
+        toast.success("Verification code sent!");
       },
       onError: () => toast.error("Failed to send code. Try again."),
     },
@@ -91,6 +97,7 @@ export default function LoginPage() {
 
   function handleMagicEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!magicCaptchaPassed) { toast.error("Please complete the human verification first."); return; }
     setDevCode(null);
     setOtp("");
     requestOtpMutation.mutate({ data: { email: magicEmail } });
@@ -104,10 +111,11 @@ export default function LoginPage() {
   function handleResendCode() {
     setOtp("");
     setDevCode(null);
-    requestOtpMutation.mutate({ data: { email: magicEmail } });
+    // Reset captcha so they have to verify again for resend
+    setMagicCaptchaPassed(false);
+    setMagicStep("email");
   }
 
-  // Auto-fill OTP from devCode
   function handleUseCode() {
     if (devCode) setOtp(devCode);
   }
@@ -178,10 +186,14 @@ export default function LoginPage() {
                         />
                       </div>
                     </div>
+
+                    {/* CAPTCHA */}
+                    <CaptchaWidget onVerified={setMagicCaptchaPassed} />
+
                     <button
                       type="submit"
-                      disabled={requestOtpMutation.isPending}
-                      className="w-full bg-primary text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      disabled={requestOtpMutation.isPending || !magicCaptchaPassed}
+                      className="w-full bg-primary text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-medium hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {requestOtpMutation.isPending ? (
                         "Sending code…"
@@ -320,11 +332,14 @@ export default function LoginPage() {
                     </div>
                   </div>
 
+                  {/* CAPTCHA */}
+                  <CaptchaWidget onVerified={setPasswordCaptchaPassed} />
+
                   <button
                     data-testid="button-submit"
                     type="submit"
-                    disabled={loginMutation.isPending}
-                    className="w-full bg-primary text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={loginMutation.isPending || !passwordCaptchaPassed}
+                    className="w-full bg-primary text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-medium hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {loginMutation.isPending ? "Signing in…" : "Sign in"}
                   </button>
