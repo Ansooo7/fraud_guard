@@ -3,41 +3,64 @@ import { broadcastTransaction, broadcastAlert } from "./websocket";
 import { logger } from "./logger";
 
 const MERCHANTS = [
-  { name: "Starbucks", category: "food", avgAmount: 8 },
-  { name: "McDonald's", category: "food", avgAmount: 12 },
-  { name: "Shell Gas Station", category: "fuel", avgAmount: 55 },
-  { name: "Amazon", category: "retail", avgAmount: 85 },
-  { name: "Walmart", category: "retail", avgAmount: 120 },
-  { name: "Apple Store", category: "electronics", avgAmount: 650 },
-  { name: "Best Buy", category: "electronics", avgAmount: 350 },
-  { name: "Coinbase", category: "crypto", avgAmount: 2800 },
-  { name: "Binance", category: "crypto", avgAmount: 4200 },
-  { name: "Bellagio Casino", category: "gambling", avgAmount: 1500 },
-  { name: "DraftKings", category: "gambling", avgAmount: 400 },
-  { name: "Western Union", category: "wire_transfer", avgAmount: 8000 },
-  { name: "MoneyGram", category: "wire_transfer", avgAmount: 6500 },
-  { name: "Tiffany & Co.", category: "jewelry", avgAmount: 2200 },
-  { name: "Netflix", category: "entertainment", avgAmount: 18 },
-  { name: "Uber", category: "transportation", avgAmount: 22 },
-  { name: "CVS Pharmacy", category: "healthcare", avgAmount: 45 },
-  { name: "Delta Airlines", category: "travel", avgAmount: 380 },
-  { name: "Marriott Hotels", category: "travel", avgAmount: 250 },
-  { name: "Target", category: "retail", avgAmount: 75 },
+  { name: "Reliance Fresh", category: "retail", avgAmount: 1200 },
+  { name: "BigBasket", category: "retail", avgAmount: 950 },
+  { name: "D-Mart", category: "retail", avgAmount: 1800 },
+  { name: "Zomato", category: "food", avgAmount: 380 },
+  { name: "Swiggy", category: "food", avgAmount: 420 },
+  { name: "Blinkit", category: "food", avgAmount: 650 },
+  { name: "Indian Oil", category: "fuel", avgAmount: 3200 },
+  { name: "HPCL Petrol Pump", category: "fuel", avgAmount: 2800 },
+  { name: "Flipkart", category: "electronics", avgAmount: 18000 },
+  { name: "Croma", category: "electronics", avgAmount: 32000 },
+  { name: "Vi Recharge", category: "entertainment", avgAmount: 299 },
+  { name: "Hotstar Premium", category: "entertainment", avgAmount: 899 },
+  { name: "CoinDCX", category: "crypto", avgAmount: 45000 },
+  { name: "WazirX", category: "crypto", avgAmount: 72000 },
+  { name: "CoinSwitch Kuber", category: "crypto", avgAmount: 38000 },
+  { name: "Dream11", category: "gambling", avgAmount: 2500 },
+  { name: "MPL Sports", category: "gambling", avgAmount: 1800 },
+  { name: "Western Union India", category: "wire_transfer", avgAmount: 85000 },
+  { name: "MoneyGram India", category: "wire_transfer", avgAmount: 62000 },
+  { name: "Tanishq Jewellers", category: "jewelry", avgAmount: 55000 },
+  { name: "Kalyan Jewellers", category: "jewelry", avgAmount: 42000 },
+  { name: "Ola Cabs", category: "transportation", avgAmount: 280 },
+  { name: "Rapido", category: "transportation", avgAmount: 150 },
+  { name: "Apollo Pharmacy", category: "healthcare", avgAmount: 1200 },
+  { name: "IndiGo Airlines", category: "travel", avgAmount: 8500 },
+  { name: "MakeMyTrip", category: "travel", avgAmount: 12000 },
+  { name: "OYO Rooms", category: "travel", avgAmount: 3200 },
+  { name: "IRCTC", category: "travel", avgAmount: 1800 },
+  { name: "Myntra", category: "retail", avgAmount: 2200 },
+  { name: "Meesho", category: "retail", avgAmount: 850 },
 ];
 
 const LOCATIONS = [
-  "New York, NY",
-  "Los Angeles, CA",
-  "Chicago, IL",
-  "Miami, FL",
-  "Houston, TX",
-  "London, UK",
-  "Tokyo, JP",
-  "Dubai, UAE",
-  "Toronto, CA",
-  "Sydney, AU",
-  "Singapore, SG",
-  "Amsterdam, NL",
+  "Mumbai, Maharashtra",
+  "Delhi, Delhi",
+  "Bengaluru, Karnataka",
+  "Hyderabad, Telangana",
+  "Chennai, Tamil Nadu",
+  "Kolkata, West Bengal",
+  "Pune, Maharashtra",
+  "Ahmedabad, Gujarat",
+  "Jaipur, Rajasthan",
+  "Lucknow, Uttar Pradesh",
+  "Surat, Gujarat",
+  "Kanpur, Uttar Pradesh",
+  "Nagpur, Maharashtra",
+  "Indore, Madhya Pradesh",
+  "Thane, Maharashtra",
+  "Bhopal, Madhya Pradesh",
+  "Visakhapatnam, Andhra Pradesh",
+  "Pimpri-Chinchwad, Maharashtra",
+  "Patna, Bihar",
+  "Vadodara, Gujarat",
+  "Coimbatore, Tamil Nadu",
+  "Guwahati, Assam",
+  "Chandigarh, Punjab",
+  "Kochi, Kerala",
+  "Noida, Uttar Pradesh",
 ];
 
 let txCounter = 100000;
@@ -55,7 +78,6 @@ function generateTransaction() {
   const location = pick(LOCATIONS);
   const userId = Math.floor(Math.random() * 6) + 1;
 
-  // Occasionally spike the amount to trigger high fraud scores
   const spike = Math.random() < 0.15;
   const amount = spike
     ? randomBetween(merchant.avgAmount * 5, merchant.avgAmount * 20)
@@ -63,9 +85,8 @@ function generateTransaction() {
 
   const roundedAmount = Math.round(amount * 100) / 100;
 
-  // Simulate varying user history
   const userTransactionCount = Math.floor(randomBetween(5, 120));
-  const userAvgAmount = randomBetween(30, 500);
+  const userAvgAmount = randomBetween(500, 25000);
   const userUniqueLocations = Math.floor(randomBetween(1, 10));
   const userUniqueDevices = Math.floor(randomBetween(1, 5));
   const userFlaggedCount = Math.random() < 0.2 ? Math.floor(randomBetween(1, 8)) : 0;
